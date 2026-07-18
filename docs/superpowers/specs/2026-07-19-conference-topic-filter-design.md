@@ -23,7 +23,7 @@ The display labels change without changing the underlying data identifiers:
 
 ### Default State
 
-With no conference selected, the COBE globe rotates automatically. Every conference edition appears as a clickable label beside its location marker. Each label uses `Conference Year · City`, and editions sharing a city remain separate controls in a small stack.
+With no conference selected, the COBE globe rotates automatically. Every conference edition appears as a clickable label beside its location marker. Each label shows `Conference Year` and `City, Country` on separate lines, and editions sharing a city remain separate controls in a small stack.
 
 The globe uses one land color because COBE 2.0.1 does not expose per-continent colors. Active markers and labels provide the visual distinction.
 
@@ -33,7 +33,9 @@ The globe does not draw arcs between conference locations or from Taiwan to conf
 
 ### Labels Inside the Globe
 
-Conference labels remain inside the circular globe frame. Browsers with CSS Anchor Positioning attach each label to its COBE marker. Browsers without CSS Anchor Positioning render a compact conference overlay inside the frame instead of placing fallback controls below the globe. The fallback remains clickable and includes the same conference, year, and city text.
+Conference labels remain inside the circular globe frame. Browsers with CSS Anchor Positioning attach each label to its COBE marker. Browsers without CSS Anchor Positioning render a compact conference overlay inside the frame instead of placing fallback controls below the globe. The fallback remains clickable and includes the same conference, year, city, and country text.
+
+When a conference is selected, an internal detail card appears inside the globe with the conference series and year, city and country, full conference name, and dates. Conference details are not duplicated in a card below the globe. The external `All conferences` control clears the selection and returns to browsing.
 
 ### Conference Selection
 
@@ -43,7 +45,7 @@ Clicking a conference label:
 - focuses the globe on that location and stops automatic rotation;
 - highlights the selected edition marker and label;
 - filters the publication list using topic AND conference AND publication type;
-- shows the selected conference details and all publications linked to that edition in the journey card.
+- shows the selected conference details inside the globe.
 
 Conference filtering and publication selection use separate state. Clicking a publication continues to focus its linked conference and show its details, but it does not silently activate the conference filter or narrow the list. Only a conference label click activates the conference filter.
 
@@ -72,6 +74,7 @@ Tests cover:
 - the intersection of topic, conference edition, and publication type;
 - conference selection and clearing;
 - no COBE arcs or Taiwan route origin;
-- conference labels include their city and remain inside the globe frame in both anchor and fallback modes;
+- conference labels include city and country and remain inside the globe frame in both anchor and fallback modes;
+- selected conference details render inside the globe rather than in a journey card below it;
 - updated labels and removal of `Accepted` and `Map linked` from rendered output;
 - successful production build and lint.
