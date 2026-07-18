@@ -132,6 +132,9 @@ export function ConferenceGlobe({
       ),
     }))
     .filter(({ editions }) => editions.length > 0);
+  const activeEdition = activeEditionId
+    ? conferenceEditions.find((edition) => edition.id === activeEditionId)
+    : undefined;
 
   return (
     <div className="globe-unit">
@@ -168,13 +171,31 @@ export function ConferenceGlobe({
                     aria-pressed={edition.id === activeEditionId}
                     onClick={() => onSelectEdition(edition.id)}
                   >
-                    {edition.series} {edition.year} · {place.city}
+                    <span className="globe-label-conference">
+                      {edition.series} {edition.year}
+                    </span>
+                    <span className="globe-label-place">
+                      {place.city}, {place.country}
+                    </span>
                   </button>
                 ))}
               </div>
             );
           })}
         </div>
+
+        {activeEdition && activePlace && (
+          <div className="globe-conference-detail" aria-live="polite">
+            <span className="globe-detail-edition">
+              {activeEdition.series} {activeEdition.year}
+            </span>
+            <strong>
+              {activePlace.city}, {activePlace.country}
+            </strong>
+            <span className="globe-detail-name">{activeEdition.name}</span>
+            <span className="globe-detail-date">{activeEdition.dates}</span>
+          </div>
+        )}
 
         <div className="conference-index-fallback" aria-label="Conferences">
           {conferenceEditions.map((edition) => {
@@ -191,7 +212,12 @@ export function ConferenceGlobe({
                 aria-pressed={edition.id === activeEditionId}
                 onClick={() => onSelectEdition(edition.id)}
               >
-                {edition.series} {edition.year} · {place.city}
+                <span className="globe-label-conference">
+                  {edition.series} {edition.year}
+                </span>
+                <span className="globe-label-place">
+                  {place.city}, {place.country}
+                </span>
               </button>
             );
           })}

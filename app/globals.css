@@ -834,11 +834,71 @@ button {
   outline: none;
 }
 
+.globe-label-conference,
+.globe-label-place {
+  display: block;
+}
+
+.globe-label-place {
+  margin-top: 2px;
+  color: var(--steel-light);
+  font-size: 6px;
+  letter-spacing: 0.04em;
+  text-transform: none;
+}
+
 .globe-conference-button.is-active,
 .conference-index-fallback button.is-active {
   border-color: var(--journey);
   color: var(--void);
   background: var(--journey);
+}
+
+.globe-conference-button.is-active .globe-label-place,
+.conference-index-fallback button.is-active .globe-label-place {
+  color: rgba(7, 9, 12, 0.68);
+}
+
+.globe-conference-detail {
+  position: absolute;
+  z-index: 8;
+  right: 12%;
+  bottom: 9%;
+  left: 12%;
+  display: grid;
+  gap: 5px;
+  max-height: 34%;
+  overflow: auto;
+  padding: 14px 16px;
+  border: 1px solid rgba(255, 138, 116, 0.5);
+  background: rgba(7, 9, 12, 0.9);
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.38);
+  backdrop-filter: blur(12px);
+}
+
+.globe-conference-detail strong {
+  color: var(--ice);
+  font-size: 13px;
+  font-weight: 520;
+}
+
+.globe-detail-edition,
+.globe-detail-date {
+  color: var(--journey);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 7px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.globe-detail-name {
+  color: var(--muted);
+  font-size: 8px;
+  line-height: 1.45;
+}
+
+.globe-detail-date {
+  color: var(--steel-light);
 }
 
 .conference-index-fallback {
@@ -878,83 +938,11 @@ button {
   backdrop-filter: blur(18px);
 }
 
-.journey-heading {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 20px;
-}
-
-.journey-heading h3,
 .journal-focus h3 {
   margin: 7px 0 2px;
   font-size: 26px;
   font-weight: 480;
   letter-spacing: -0.04em;
-}
-
-.journey-heading > div > p:last-child {
-  margin: 0;
-  color: var(--muted);
-  font-size: 11px;
-}
-
-.edition-badge {
-  flex: 0 0 auto;
-  padding: 7px 8px;
-  border: 1px solid rgba(255, 138, 116, 0.45);
-  color: var(--journey);
-  font-family: var(--font-geist-mono), monospace;
-  font-size: 9px;
-}
-
-.conference-name {
-  margin: 20px 0 0;
-  color: #bcc6cf;
-  font-size: 11px;
-  line-height: 1.55;
-}
-
-.conference-date {
-  margin: 7px 0 0;
-  color: var(--steel-light);
-  font-family: var(--font-geist-mono), monospace;
-  font-size: 8px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.related-block {
-  margin-top: 22px;
-  padding-top: 18px;
-  border-top: 1px solid var(--line);
-}
-
-.related-paper {
-  width: 100%;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 12px;
-  padding: 10px 0;
-  border: 0;
-  border-bottom: 1px solid rgba(232, 238, 246, 0.07);
-  color: var(--muted);
-  background: transparent;
-  text-align: left;
-  font-size: 9px;
-  line-height: 1.45;
-  cursor: pointer;
-}
-
-.related-paper:hover,
-.related-paper:focus-visible,
-.related-paper.is-current {
-  outline: none;
-  color: var(--ice);
-}
-
-.related-paper.is-current > span:last-child {
-  color: var(--journey);
 }
 
 .journal-focus > p:not(.eyebrow) {

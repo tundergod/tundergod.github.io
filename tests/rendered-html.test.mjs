@@ -49,7 +49,7 @@ test("server-renders the academic profile and complete publication observatory",
     .replace(/<!--[\s\S]*?-->/g, "")
     .replace(/<[^>]+>/g, " ")
     .replace(/\s+/g, " ");
-  assert.match(visibleText, /DAC 2026 · Long Beach/);
+  assert.match(visibleText, /DAC 2026 Long Beach, USA/);
   assert.match(html, /Travel field notes/);
   assert.doesNotMatch(html, />Accepted</);
   assert.doesNotMatch(html, /Map linked/);
@@ -72,11 +72,20 @@ test("keeps conference controls inside a globe with no routes", async () => {
   const fallbackStart = globeSource.indexOf(
     '<div className="conference-index-fallback"',
   );
+  const detailStart = globeSource.indexOf(
+    'className="globe-conference-detail"',
+  );
+  const observatorySource = await readFile(
+    new URL("../app/components/publication-observatory.tsx", import.meta.url),
+    "utf8",
+  );
 
   assert.match(globeSource, /arcs:\s*\[\]/);
   assert.doesNotMatch(globeSource, /topicRouteArcs|buildArcs/);
   assert.ok(frameStart >= 0);
   assert.ok(fallbackStart > frameStart && fallbackStart < frameEnd);
+  assert.ok(detailStart > frameStart && detailStart < frameEnd);
+  assert.doesNotMatch(observatorySource, /Focused location|related-block/);
 });
 
 test("removes the disposable starter preview", async () => {

@@ -13,7 +13,6 @@ import {
   filterPublications,
   getEditionForPublication,
   getPlaceForEdition,
-  getPublicationsForEdition,
   type PublicationTypeFilter,
 } from "../lib/conference-model";
 import { ConferenceGlobe } from "./conference-globe";
@@ -118,9 +117,6 @@ export function PublicationObservatory() {
     : undefined;
   const selectedEdition = filteredEdition ?? publicationEdition;
   const selectedPlace = getPlaceForEdition(selectedEdition, places);
-  const relatedPublications = selectedEdition
-    ? getPublicationsForEdition(selectedEdition.id, publications)
-    : [];
 
   function selectPublication(publication: Publication) {
     setSelectedId(publication.id);
@@ -239,36 +235,7 @@ export function PublicationObservatory() {
             onSelectEdition={selectEdition}
           />
 
-          {selectedEdition && selectedPlace ? (
-            <div className="journey-card" aria-live="polite">
-                <div className="journey-heading">
-                  <div>
-                    <p className="eyebrow">Focused location</p>
-                    <h3>{selectedPlace.city}</h3>
-                    <p>{[selectedPlace.region, selectedPlace.country].filter(Boolean).join(", ")}</p>
-                  </div>
-                  <span className="edition-badge">{selectedEdition.series} ’{String(selectedEdition.year).slice(2)}</span>
-                </div>
-                <p className="conference-name">{selectedEdition.name}</p>
-                <p className="conference-date">{selectedEdition.dates}</p>
-                <div className="related-block">
-                  <p className="eyebrow">
-                    {relatedPublications.length} {relatedPublications.length === 1 ? "paper" : "papers"} at this edition
-                  </p>
-                  {relatedPublications.map((publication) => (
-                    <button
-                      type="button"
-                      key={publication.id}
-                      className={publication.id === selectedId ? "related-paper is-current" : "related-paper"}
-                      onClick={() => selectPublication(publication)}
-                    >
-                      <span>{publication.title}</span>
-                      <span aria-hidden="true">↗</span>
-                    </button>
-                  ))}
-                </div>
-            </div>
-          ) : selectedPublication ? (
+          {!selectedEdition && selectedPublication ? (
             <div className="journey-card" aria-live="polite">
               <div className="journal-focus">
                 <p className="eyebrow">Publication focus</p>
