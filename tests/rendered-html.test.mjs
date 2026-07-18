@@ -43,6 +43,7 @@ test("server-renders the academic profile and complete publication observatory",
   assert.match(html, /Conference signal/);
   assert.match(html, /Browse all conferences/);
   assert.match(html, /globe-conference-button/);
+  assert.doesNotMatch(html, /class="globe-origin"/);
   assert.match(html, /Travel field notes/);
   assert.doesNotMatch(html, />Accepted</);
   assert.doesNotMatch(html, /Map linked/);

@@ -786,20 +786,6 @@ button {
 .globe-orbit-one { transform: rotate(18deg); }
 .globe-orbit-two { transform: rotate(-48deg); opacity: 0.55; }
 
-.globe-origin {
-  position: absolute;
-  z-index: 4;
-  right: 13%;
-  bottom: 17%;
-  padding: 3px 5px;
-  border: 1px solid rgba(124, 199, 255, 0.35);
-  color: var(--signal);
-  background: rgba(7, 9, 12, 0.8);
-  font-family: var(--font-geist-mono), monospace;
-  font-size: 7px;
-  letter-spacing: 0.1em;
-}
-
 .globe-label-layer {
   position: absolute;
   z-index: 6;
@@ -846,6 +832,13 @@ button {
   border-color: var(--journey);
   color: var(--journey);
   outline: none;
+}
+
+.globe-conference-button.is-active,
+.conference-index-fallback button.is-active {
+  border-color: var(--journey);
+  color: var(--void);
+  background: var(--journey);
 }
 
 .conference-index-fallback {
