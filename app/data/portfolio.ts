@@ -32,7 +32,6 @@ export type ConferenceEdition = {
   series: string;
   name: string;
   year: number;
-  startsOn: string;
   dates: string;
   placeId: string;
 };
@@ -49,14 +48,14 @@ export const places: Place[] = [
 ];
 
 export const conferenceEditions: ConferenceEdition[] = [
-  { id: "iccad-2026", series: "ICCAD", name: "ACM/IEEE International Conference on Computer-Aided Design", year: 2026, startsOn: "2026-11-08", dates: "Nov. 8–12, 2026", placeId: "san-jose" },
-  { id: "esweek-2026", series: "CASES / EMSOFT / CODES", name: "CASES / EMSOFT / CODES", year: 2026, startsOn: "2026-10-04", dates: "Oct. 4–9, 2026", placeId: "barcelona" },
-  { id: "dac-2026", series: "DAC", name: "ACM/IEEE The Chips to Systems Conference", year: 2026, startsOn: "2026-07-26", dates: "Jul. 26–29, 2026", placeId: "long-beach" },
-  { id: "date-2026", series: "DATE", name: "ACM/IEEE Design, Automation and Test in Europe Conference", year: 2026, startsOn: "2026-04-20", dates: "Apr. 20–22, 2026", placeId: "verona" },
-  { id: "sac-2026", series: "SAC", name: "ACM Symposium on Applied Computing", year: 2026, startsOn: "2026-03-23", dates: "Mar. 23–27, 2026", placeId: "thessaloniki" },
-  { id: "aspdac-2026", series: "ASP-DAC", name: "ACM/IEEE Asia and South Pacific Design Automation Conference", year: 2026, startsOn: "2026-01-19", dates: "Jan. 19–22, 2026", placeId: "hong-kong" },
-  { id: "iccad-2023", series: "ICCAD", name: "ACM/IEEE International Conference on Computer-Aided Design", year: 2023, startsOn: "2023-10-29", dates: "Oct. 29–Nov. 2, 2023", placeId: "san-francisco" },
-  { id: "date-2023", series: "DATE", name: "ACM/IEEE Design, Automation and Test in Europe Conference", year: 2023, startsOn: "2023-04-17", dates: "Apr. 17–19, 2023", placeId: "antwerp" },
+  { id: "iccad-2026", series: "ICCAD", name: "ACM/IEEE International Conference on Computer-Aided Design", year: 2026, dates: "Nov. 8–12, 2026", placeId: "san-jose" },
+  { id: "esweek-2026", series: "CASES / EMSOFT / CODES", name: "CASES / EMSOFT / CODES", year: 2026, dates: "Oct. 4–9, 2026", placeId: "barcelona" },
+  { id: "dac-2026", series: "DAC", name: "ACM/IEEE The Chips to Systems Conference", year: 2026, dates: "Jul. 26–29, 2026", placeId: "long-beach" },
+  { id: "date-2026", series: "DATE", name: "ACM/IEEE Design, Automation and Test in Europe Conference", year: 2026, dates: "Apr. 20–22, 2026", placeId: "verona" },
+  { id: "sac-2026", series: "SAC", name: "ACM Symposium on Applied Computing", year: 2026, dates: "Mar. 23–27, 2026", placeId: "thessaloniki" },
+  { id: "aspdac-2026", series: "ASP-DAC", name: "ACM/IEEE Asia and South Pacific Design Automation Conference", year: 2026, dates: "Jan. 19–22, 2026", placeId: "hong-kong" },
+  { id: "iccad-2023", series: "ICCAD", name: "ACM/IEEE International Conference on Computer-Aided Design", year: 2023, dates: "Oct. 29–Nov. 2, 2023", placeId: "san-francisco" },
+  { id: "date-2023", series: "DATE", name: "ACM/IEEE Design, Automation and Test in Europe Conference", year: 2023, dates: "Apr. 17–19, 2023", placeId: "antwerp" },
 ];
 
 export const publications: Publication[] = [

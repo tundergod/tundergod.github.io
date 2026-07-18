@@ -1,13 +1,10 @@
 "use client";
 
-import createGlobe, { type Arc, type Marker } from "cobe";
+import createGlobe, { type Marker } from "cobe";
 import { useEffect, useRef, type CSSProperties } from "react";
 
 import type { ConferenceEdition, Place } from "../data/portfolio";
-import {
-  coordinatesToAngles,
-  type TopicRouteArc,
-} from "../lib/conference-model";
+import { coordinatesToAngles } from "../lib/conference-model";
 
 type ConferenceGlobeProps = {
   activeEditionId?: string;
@@ -15,7 +12,6 @@ type ConferenceGlobeProps = {
   conferenceEditions: ConferenceEdition[];
   onSelectEdition: (editionId: string) => void;
   places: Place[];
-  topicRouteArcs: TopicRouteArc[];
 };
 
 function easeAngle(current: number, target: number, amount: number) {
@@ -31,7 +27,6 @@ export function ConferenceGlobe({
   conferenceEditions,
   onSelectEdition,
   places,
-  topicRouteArcs,
 }: ConferenceGlobeProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const frameRef = useRef<HTMLDivElement>(null);
@@ -76,12 +71,6 @@ export function ConferenceGlobe({
             : ([0.49, 0.78, 1] as [number, number, number]),
       }));
 
-    const buildArcs = (): Arc[] =>
-      topicRouteArcs.map((arc) => ({
-        ...arc,
-        color: [0.49, 0.78, 1],
-      }));
-
     const globe = createGlobe(canvas, {
       devicePixelRatio: Math.min(window.devicePixelRatio, 2),
       width: size * 2,
@@ -95,14 +84,11 @@ export function ConferenceGlobe({
       baseColor: [0.17, 0.21, 0.26],
       markerColor: [0.49, 0.78, 1],
       glowColor: [0.035, 0.05, 0.07],
-      arcColor: [1, 0.54, 0.45],
-      arcWidth: 0.55,
-      arcHeight: 0.18,
       markerElevation: 0.025,
       opacity: 0.93,
       scale: 0.93,
       markers: buildMarkers(),
-      arcs: buildArcs(),
+      arcs: [],
     });
 
     const render = () => {
@@ -120,7 +106,7 @@ export function ConferenceGlobe({
         phi,
         theta,
         markers: buildMarkers(),
-        arcs: buildArcs(),
+        arcs: [],
       });
       animationFrame = requestAnimationFrame(render);
     };
@@ -136,7 +122,7 @@ export function ConferenceGlobe({
       resizeObserver.disconnect();
       globe.destroy();
     };
-  }, [places, topicRouteArcs]);
+  }, [places]);
 
   const editionsByPlace = places
     .map((place) => ({
@@ -182,27 +168,34 @@ export function ConferenceGlobe({
                     aria-pressed={edition.id === activeEditionId}
                     onClick={() => onSelectEdition(edition.id)}
                   >
-                    {edition.series} {edition.year}
+                    {edition.series} {edition.year} · {place.city}
                   </button>
                 ))}
               </div>
             );
           })}
         </div>
-      </div>
 
-      <div className="conference-index-fallback" aria-label="Conferences">
-        {conferenceEditions.map((edition) => (
-          <button
-            className={edition.id === activeEditionId ? "is-active" : undefined}
-            type="button"
-            key={edition.id}
-            aria-pressed={edition.id === activeEditionId}
-            onClick={() => onSelectEdition(edition.id)}
-          >
-            {edition.series} {edition.year}
-          </button>
-        ))}
+        <div className="conference-index-fallback" aria-label="Conferences">
+          {conferenceEditions.map((edition) => {
+            const place = places.find(
+              (candidate) => candidate.id === edition.placeId,
+            );
+            if (!place) return null;
+
+            return (
+              <button
+                className={edition.id === activeEditionId ? "is-active" : undefined}
+                type="button"
+                key={edition.id}
+                aria-pressed={edition.id === activeEditionId}
+                onClick={() => onSelectEdition(edition.id)}
+              >
+                {edition.series} {edition.year} · {place.city}
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

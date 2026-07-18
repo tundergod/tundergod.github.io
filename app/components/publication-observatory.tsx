@@ -14,8 +14,6 @@ import {
   getEditionForPublication,
   getPlaceForEdition,
   getPublicationsForEdition,
-  getTopicRouteArcs,
-  getTopicRouteEditions,
   type PublicationTypeFilter,
 } from "../lib/conference-model";
 import { ConferenceGlobe } from "./conference-globe";
@@ -109,14 +107,6 @@ export function PublicationObservatory() {
     [activeFilter, conferenceFilterId, publicationType],
   );
   const years = [...new Set(visiblePublications.map((publication) => publication.year))];
-  const topicRouteArcs = useMemo(
-    () =>
-      getTopicRouteArcs(
-        getTopicRouteEditions(activeFilter, publications, conferenceEditions),
-        places,
-      ),
-    [activeFilter],
-  );
   const selectedPublication = selectedId
     ? publications.find((publication) => publication.id === selectedId)
     : undefined;
@@ -247,7 +237,6 @@ export function PublicationObservatory() {
             conferenceEditions={conferenceEditions}
             places={places}
             onSelectEdition={selectEdition}
-            topicRouteArcs={topicRouteArcs}
           />
 
           {selectedEdition && selectedPlace ? (

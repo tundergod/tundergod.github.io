@@ -12,8 +12,6 @@ import {
   getEditionsForPlace,
   getPlaceForEdition,
   getPublicationsForEdition,
-  getTopicRouteArcs,
-  getTopicRouteEditions,
 } from "../app/lib/conference-model.ts";
 
 test("topic, conference edition, and publication type filters intersect", () => {
@@ -35,63 +33,6 @@ test("topic, conference edition, and publication type filters intersect", () => 
     }),
     [],
   );
-});
-
-test("topic route editions are chronological and All has no route", () => {
-  const route = getTopicRouteEditions(
-    "Intermittent",
-    publications,
-    conferenceEditions,
-  );
-
-  assert.deepEqual(
-    route.map(({ id }) => id),
-    ["date-2023", "iccad-2023", "sac-2026", "iccad-2026"],
-  );
-  assert.deepEqual(
-    route.map(({ startsOn }) => startsOn),
-    [...route.map(({ startsOn }) => startsOn)].sort(),
-  );
-  assert.deepEqual(
-    getTopicRouteEditions("All", publications, conferenceEditions),
-    [],
-  );
-});
-
-test("topic route arcs skip consecutive editions at the same place", () => {
-  const route = [
-    {
-      id: "first-san-jose",
-      series: "First",
-      name: "First",
-      year: 2024,
-      startsOn: "2024-01-01",
-      dates: "Jan. 1, 2024",
-      placeId: "san-jose",
-    },
-    {
-      id: "second-san-jose",
-      series: "Second",
-      name: "Second",
-      year: 2025,
-      startsOn: "2025-01-01",
-      dates: "Jan. 1, 2025",
-      placeId: "san-jose",
-    },
-    {
-      id: "barcelona",
-      series: "Third",
-      name: "Third",
-      year: 2026,
-      startsOn: "2026-01-01",
-      dates: "Jan. 1, 2026",
-      placeId: "barcelona",
-    },
-  ];
-
-  const arcs = getTopicRouteArcs(route, places);
-  assert.equal(arcs.length, 1);
-  assert.equal(arcs[0]?.id, "topic-route-second-san-jose-barcelona");
 });
 
 test("GraphISC appears once with journal and conference venue tags", () => {
@@ -135,7 +76,6 @@ test("one place can host several distinct conference editions", () => {
     id: "future-systems-2027",
     series: "Future Systems",
     year: 2027,
-    startsOn: "2027-05-01",
     dates: "May 1–3, 2027",
     placeId: "san-francisco",
   };

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { access } from "node:fs/promises";
+import { access, readFile } from "node:fs/promises";
 import test from "node:test";
 
 const templateRoot = new URL("../", import.meta.url);
@@ -44,6 +44,12 @@ test("server-renders the academic profile and complete publication observatory",
   assert.match(html, /Browse all conferences/);
   assert.match(html, /globe-conference-button/);
   assert.doesNotMatch(html, /class="globe-origin"/);
+  const visibleText = html
+    .replace(/<script[\s\S]*?<\/script>/g, "")
+    .replace(/<!--[\s\S]*?-->/g, "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ");
+  assert.match(visibleText, /DAC 2026 · Long Beach/);
   assert.match(html, /Travel field notes/);
   assert.doesNotMatch(html, />Accepted</);
   assert.doesNotMatch(html, /Map linked/);
@@ -54,6 +60,23 @@ test("server-renders the academic profile and complete publication observatory",
   assert.doesNotMatch(html, /Let’s make constrained/);
   assert.doesNotMatch(html, /class="hero"|class="research-section"/);
   assert.doesNotMatch(html, /Your site is taking shape|codex-preview|react-loading-skeleton/);
+});
+
+test("keeps conference controls inside a globe with no routes", async () => {
+  const globeSource = await readFile(
+    new URL("../app/components/conference-globe.tsx", import.meta.url),
+    "utf8",
+  );
+  const frameStart = globeSource.indexOf('<div className="globe-frame"');
+  const frameEnd = globeSource.indexOf("\n      </div>", frameStart);
+  const fallbackStart = globeSource.indexOf(
+    '<div className="conference-index-fallback"',
+  );
+
+  assert.match(globeSource, /arcs:\s*\[\]/);
+  assert.doesNotMatch(globeSource, /topicRouteArcs|buildArcs/);
+  assert.ok(frameStart >= 0);
+  assert.ok(fallbackStart > frameStart && fallbackStart < frameEnd);
 });
 
 test("removes the disposable starter preview", async () => {
