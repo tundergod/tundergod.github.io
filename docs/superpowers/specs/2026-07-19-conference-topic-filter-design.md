@@ -2,7 +2,7 @@
 
 ## Goal
 
-Turn the globe into a conference filter and a compact map of how each research topic has appeared across conference locations. The publication list remains the primary content; the globe provides filtering and context rather than a separate navigation system.
+Turn the globe into a conference filter with conference labels placed inside the map. The publication list remains the primary content; the globe provides filtering and location context rather than a separate navigation system.
 
 ## Filter Model
 
@@ -23,19 +23,17 @@ The display labels change without changing the underlying data identifiers:
 
 ### Default State
 
-With no conference selected, the COBE globe rotates automatically. Every conference edition appears as a clickable label beside its location marker. Editions sharing a city remain separate controls in a small stack.
+With no conference selected, the COBE globe rotates automatically. Every conference edition appears as a clickable label beside its location marker. Each label uses `Conference Year · City`, and editions sharing a city remain separate controls in a small stack.
 
-The globe uses one land color because COBE 2.0.1 does not expose per-continent colors. Topic routes and active markers provide the visual distinction instead.
+The globe uses one land color because COBE 2.0.1 does not expose per-continent colors. Active markers and labels provide the visual distinction.
 
-### Topic Routes
+### No Map Connections
 
-When one research topic is selected, collect the conference editions linked to publications in that topic. Sort the editions chronologically by year and then by their listed date order. Connect each consecutive pair of locations with a COBE arc, producing one readable research route rather than an all-to-all mesh.
+The globe does not draw arcs between conference locations or from Taiwan to conference locations. Research-topic filters affect only the publication list; they do not create geographic routes.
 
-Each conference edition gains a machine-readable `startsOn` date so route ordering never depends on parsing the human-facing `dates` text.
+### Labels Inside the Globe
 
-Duplicate consecutive locations do not create a zero-length arc. A topic with fewer than two distinct conference locations has markers but no route.
-
-`All` topics shows no arcs to avoid mixing unrelated routes. Taipei is not rendered as a route origin, and no Taiwan-to-conference arc is shown.
+Conference labels remain inside the circular globe frame. Browsers with CSS Anchor Positioning attach each label to its COBE marker. Browsers without CSS Anchor Positioning render a compact conference overlay inside the frame instead of placing fallback controls below the globe. The fallback remains clickable and includes the same conference, year, and city text.
 
 ### Conference Selection
 
@@ -49,7 +47,7 @@ Clicking a conference label:
 
 Conference filtering and publication selection use separate state. Clicking a publication continues to focus its linked conference and show its details, but it does not silently activate the conference filter or narrow the list. Only a conference label click activates the conference filter.
 
-Clicking `All conferences` clears the conference filter, removes the focused conference card, and resumes automatic rotation unless reduced motion is enabled. Topic route arcs remain governed only by the active topic.
+Clicking `All conferences` clears the conference filter, removes the focused conference card, and resumes automatic rotation unless reduced motion is enabled.
 
 ## Publication Presentation
 
@@ -64,8 +62,8 @@ Clicking `All conferences` clears the conference filter, removes the focused con
 - All globe labels and filter chips are native buttons with visible keyboard focus.
 - Filter state uses `aria-pressed`; the publication list remains an `aria-live` region.
 - On narrow screens, filter groups wrap and the globe remains below the publication controls without cross-column connector lines.
-- With reduced motion enabled, the globe does not auto-rotate, but labels, topic routes, focusing, and filtering continue to work.
-- Browsers without CSS Anchor Positioning use the existing conference-button fallback below the globe.
+- With reduced motion enabled, the globe does not auto-rotate, but labels, focusing, and filtering continue to work.
+- Browsers without CSS Anchor Positioning use a compact conference-button overlay inside the globe frame.
 
 ## Verification
 
@@ -73,7 +71,7 @@ Tests cover:
 
 - the intersection of topic, conference edition, and publication type;
 - conference selection and clearing;
-- chronological topic routes without duplicate-location arcs;
-- no arcs for `All` topics or fewer than two distinct locations;
+- no COBE arcs or Taiwan route origin;
+- conference labels include their city and remain inside the globe frame in both anchor and fallback modes;
 - updated labels and removal of `Accepted` and `Map linked` from rendered output;
 - successful production build and lint.
