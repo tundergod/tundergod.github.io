@@ -6,11 +6,13 @@ import {
   conferenceEditions,
   places,
   publications,
+  researchAreaLabels,
   type Publication,
   type ResearchArea,
 } from "../data/portfolio";
 import {
   filterPublications,
+  getEditionIdsForPlace,
   getEditionForPublication,
   getPlaceForEdition,
   type PublicationTypeFilter,
@@ -22,10 +24,10 @@ const topicFilters: Array<{
   label: string;
 }> = [
   { value: "All", label: "All" },
-  { value: "Storage", label: "Memory / Storage" },
-  { value: "Architecture", label: "Architecture" },
-  { value: "Intermittent", label: "Embedded" },
-  { value: "Robotics", label: "Robotics" },
+  { value: "Storage", label: researchAreaLabels.Storage },
+  { value: "Architecture", label: researchAreaLabels.Architecture },
+  { value: "Intermittent", label: researchAreaLabels.Intermittent },
+  { value: "Robotics", label: researchAreaLabels.Robotics },
 ];
 
 const publicationTypeFilters: Array<{
@@ -64,40 +66,49 @@ function PublicationRow({
     <article
       className={`publication-row${selected ? " is-selected" : ""}`}
     >
+      <button
+        className="publication-row-hit-area"
+        type="button"
+        aria-label={`Select ${publication.title}`}
+        aria-pressed={selected}
+        onClick={() => onSelect(publication)}
+      />
       <span className="publication-index" aria-hidden="true">
         {publication.type === "conference" ? "◎" : "◇"}
       </span>
       <span className="publication-copy">
-        <span className="publication-title">{publication.title}</span>
-        <span className="publication-authors">
-          <AuthorLine authors={publication.authors} />
-        </span>
-        <span className="publication-meta">
+        <span className="publication-title-line">
+          <span className="publication-title">{publication.title}</span>
           {(publication.venueTags ?? [publication.venue]).map((venue) => (
             <span className="venue-chip" key={venue}>{venue}</span>
           ))}
-          <span>{publication.type === "journal" ? "Journal" : "Conference"}</span>
-        </span>
-        <span className="publication-actions">
+          <span className="publication-type-tag">
+            {publication.type === "journal" ? "Journal" : "Conference"}
+          </span>
           {publication.doi && (
             <a
+              className="publication-doi"
               href={`https://doi.org/${publication.doi}`}
               target="_blank"
               rel="noreferrer"
               aria-label={`Open DOI for ${publication.title}`}
+              onClick={() => onSelect(publication)}
             >
               DOI <span aria-hidden="true">↗</span>
             </a>
           )}
-          {publication.conferenceEditionId && (
-            <button
-              type="button"
-              aria-pressed={selected}
-              onClick={() => onSelect(publication)}
-            >
-              Show on map
-            </button>
-          )}
+        </span>
+        <span className="publication-secondary-line">
+          <span className="publication-authors">
+            <AuthorLine authors={publication.authors} />
+          </span>
+          <span className="publication-topic-tags">
+            {publication.areas.map((area) => (
+              <span className="publication-topic-tag" key={area}>
+                {researchAreaLabels[area]}
+              </span>
+            ))}
+          </span>
         </span>
       </span>
     </article>
@@ -108,19 +119,24 @@ export function PublicationObservatory() {
   const [activeFilter, setActiveFilter] = useState<"All" | ResearchArea>("All");
   const [publicationType, setPublicationType] =
     useState<PublicationTypeFilter>("All");
-  const [conferenceFilterId, setConferenceFilterId] = useState<string | null>(
-    null,
-  );
+  const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const selectedPlaceEditionIds = useMemo(
+    () => selectedPlaceId
+      ? getEditionIdsForPlace(selectedPlaceId, conferenceEditions)
+      : undefined,
+    [selectedPlaceId],
+  );
 
   const visiblePublications = useMemo(
     () =>
       filterPublications(publications, {
         area: activeFilter,
-        editionId: conferenceFilterId ?? undefined,
+        editionIds: selectedPlaceEditionIds,
         type: publicationType,
       }),
-    [activeFilter, conferenceFilterId, publicationType],
+    [activeFilter, publicationType, selectedPlaceEditionIds],
   );
   const years = [...new Set(visiblePublications.map((publication) => publication.year))];
   const selectedPublication = selectedId
@@ -129,28 +145,25 @@ export function PublicationObservatory() {
   const publicationEdition = selectedPublication
     ? getEditionForPublication(selectedPublication, conferenceEditions)
     : undefined;
-  const filteredEdition = conferenceFilterId
-    ? conferenceEditions.find((edition) => edition.id === conferenceFilterId)
-    : undefined;
-  const selectedEdition = filteredEdition ?? publicationEdition;
-  const selectedPlace = getPlaceForEdition(selectedEdition, places);
+  const publicationPlace = getPlaceForEdition(publicationEdition, places);
+  const selectedPlace = selectedPlaceId
+    ? places.find((place) => place.id === selectedPlaceId)
+    : publicationPlace;
 
   function selectPublication(publication: Publication) {
+    setSelectedPlaceId(null);
     setSelectedId(publication.id);
   }
 
   function selectEdition(editionId: string) {
-    const [firstPublication] = filterPublications(publications, {
-      area: activeFilter,
-      editionId,
-      type: publicationType,
-    });
-    setConferenceFilterId(editionId);
-    setSelectedId(firstPublication?.id ?? null);
+    const edition = conferenceEditions.find((candidate) => candidate.id === editionId);
+    if (!edition) return;
+    setSelectedPlaceId(edition.placeId);
+    setSelectedId(null);
   }
 
   function clearConferenceFocus() {
-    setConferenceFilterId(null);
+    setSelectedPlaceId(null);
     setSelectedId(null);
   }
 
@@ -231,7 +244,7 @@ export function PublicationObservatory() {
           <div className="panel-kicker">
             <span className="pulse-dot" />
             Conference signal
-            {selectedEdition ? (
+            {selectedPlace ? (
               <button
                 className="browse-conferences-button"
                 type="button"
@@ -246,13 +259,13 @@ export function PublicationObservatory() {
 
           <ConferenceGlobe
             activePlace={selectedPlace}
-            activeEditionId={selectedEdition?.id}
+            activeEditionId={publicationEdition?.id}
             conferenceEditions={conferenceEditions}
             places={places}
             onSelectEdition={selectEdition}
           />
 
-          {!selectedEdition && selectedPublication ? (
+          {!publicationEdition && selectedPublication ? (
             <div className="journey-card" aria-live="polite">
               <div className="journal-focus">
                 <p className="eyebrow">Publication focus</p>

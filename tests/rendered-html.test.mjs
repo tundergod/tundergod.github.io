@@ -42,9 +42,13 @@ test("server-renders the academic profile and complete publication observatory",
   assert.match(html, /Filter publications by type/);
   assert.match(html, /Progress Gambit/);
   assert.match(html, /href="https:\/\/doi.org\/10.1145\/3814956"/);
-  assert.match(html, /Show on map/);
+  assert.match(html, /class="publication-row-hit-area"/);
+  assert.match(html, /class="publication-title-line"/);
+  assert.match(html, /class="publication-topic-tag"[^>]*>Memory \/ Storage</);
+  assert.match(html, /class="publication-type-tag"[^>]*>Conference</);
+  assert.doesNotMatch(html, /Show on map/);
   assert.match(html, /<article class="publication-row/);
-  assert.doesNotMatch(html, /<button class="publication-row/);
+  assert.doesNotMatch(html, /<button class="publication-row"/);
   assert.match(html, /GraphISC/);
   assert.match(html, /iCheck/);
   assert.match(html, /Conference signal/);
