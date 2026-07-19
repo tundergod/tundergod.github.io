@@ -58,13 +58,36 @@ test("the shared embedded-systems edition groups distinct papers", () => {
     papers.map((paper) => paper.id).sort(),
     ["graphisc-tcad-2026", "winhd-cases-2026"],
   );
-  assert.deepEqual(
-    papers.find((paper) => paper.id === "winhd-cases-2026")?.venueTags,
-    ["TCAD", "CASES / EMSOFT / CODES"],
-  );
+  const winhd = papers.find((paper) => paper.id === "winhd-cases-2026");
+  assert.equal(winhd?.venue, "CASES");
+  assert.equal(winhd?.venueTags, undefined);
   assert.equal(
-    papers.find((paper) => paper.id === "winhd-cases-2026")?.type,
-    "journal",
+    winhd?.type,
+    "conference",
+  );
+});
+
+test("confirmed DOI values match exact publication records", () => {
+  const expected = {
+    "timing-composable-tecs-2026": "10.1145/3814956",
+    "star-date-2026": "10.23919/DATE69613.2026.11539515",
+    "volunteer-computing-sac-2026": "10.1145/3748522.3779848",
+    "recross-sac-2026": "10.1145/3748522.3779854",
+    "sara-aspdac-2026": "10.1109/ASP-DAC66049.2026.11420662",
+    "isafe-tcad-2025": "10.1109/TCAD.2024.3522211",
+    "flash-survey-tos-2025": "10.1145/3723167",
+    "train-iccad-2023": "10.1109/ICCAD57390.2023.10323634",
+    "data-freshness-date-2023": "10.23919/DATE56975.2023.10136912",
+    "icheck-tcad-2021": "10.1109/TCAD.2020.3046571",
+  };
+
+  assert.deepEqual(
+    Object.fromEntries(
+      publications
+        .filter((publication) => publication.doi)
+        .map((publication) => [publication.id, publication.doi]),
+    ),
+    expected,
   );
 });
 

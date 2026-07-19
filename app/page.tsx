@@ -28,6 +28,16 @@ export default function Home() {
         </nav>
       </header>
 
+      <section className="profile-intro" aria-labelledby="profile-name">
+        <h1 className="sr-only" id="profile-name">Wen Sheng Lim</h1>
+        <p>
+          Wen Sheng Lim is a PhD candidate in Computer Science and Information
+          Engineering at National Taiwan University. His research spans memory
+          and storage systems, embedded computing, and efficient systems under
+          resource constraints. He expects to graduate in January 2027.
+        </p>
+      </section>
+
       <section className="publications-section" id="publications">
         <PublicationObservatory />
       </section>

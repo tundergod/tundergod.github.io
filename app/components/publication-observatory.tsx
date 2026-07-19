@@ -61,11 +61,8 @@ function PublicationRow({
   onSelect: (publication: Publication) => void;
 }) {
   return (
-    <button
+    <article
       className={`publication-row${selected ? " is-selected" : ""}`}
-      type="button"
-      aria-pressed={selected}
-      onClick={() => onSelect(publication)}
     >
       <span className="publication-index" aria-hidden="true">
         {publication.type === "conference" ? "◎" : "◇"}
@@ -81,9 +78,29 @@ function PublicationRow({
           ))}
           <span>{publication.type === "journal" ? "Journal" : "Conference"}</span>
         </span>
+        <span className="publication-actions">
+          {publication.doi && (
+            <a
+              href={`https://doi.org/${publication.doi}`}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={`Open DOI for ${publication.title}`}
+            >
+              DOI <span aria-hidden="true">↗</span>
+            </a>
+          )}
+          {publication.conferenceEditionId && (
+            <button
+              type="button"
+              aria-pressed={selected}
+              onClick={() => onSelect(publication)}
+            >
+              Show on map
+            </button>
+          )}
+        </span>
       </span>
-      <span className="publication-arrow" aria-hidden="true">↗</span>
-    </button>
+    </article>
   );
 }
 

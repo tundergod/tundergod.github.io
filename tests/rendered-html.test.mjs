@@ -33,11 +33,18 @@ test("server-renders the academic profile and complete publication observatory",
   const html = await response.text();
   assert.match(html, /<title>Wen Sheng Lim — Computer Systems Research<\/title>/i);
   assert.match(html, /class="publications-section"/);
+  assert.match(html, /class="profile-intro"/);
+  assert.match(html, /Wen Sheng Lim is a PhD candidate in Computer Science and Information Engineering/);
+  assert.match(html, /expects to graduate in January 2027/);
   assert.match(html, /PhD candidate · National Taiwan University \(NTU\), Taiwan/);
   assert.match(html, /Memory \/ Storage/);
   assert.match(html, /Embedded/);
   assert.match(html, /Filter publications by type/);
   assert.match(html, /Progress Gambit/);
+  assert.match(html, /href="https:\/\/doi.org\/10.1145\/3814956"/);
+  assert.match(html, /Show on map/);
+  assert.match(html, /<article class="publication-row/);
+  assert.doesNotMatch(html, /<button class="publication-row/);
   assert.match(html, /GraphISC/);
   assert.match(html, /iCheck/);
   assert.match(html, /Conference signal/);
