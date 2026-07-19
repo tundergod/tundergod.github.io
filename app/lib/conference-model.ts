@@ -10,7 +10,6 @@ export function filterPublications(
   allPublications: Publication[],
   filters: {
     topic: "All" | string;
-    editionId?: string;
     editionIds?: string[];
     type: PublicationTypeFilter;
   },
@@ -18,8 +17,6 @@ export function filterPublications(
   return allPublications.filter(
     (publication) =>
       (filters.topic === "All" || publication.topics.includes(filters.topic)) &&
-      (!filters.editionId ||
-        publication.conferenceEditionId === filters.editionId) &&
       (!filters.editionIds ||
         (!!publication.conferenceEditionId &&
           filters.editionIds.includes(publication.conferenceEditionId))) &&
@@ -41,15 +38,6 @@ export function getPlaceForEdition(
 ) {
   if (!edition) return undefined;
   return allPlaces.find((place) => place.id === edition.placeId);
-}
-
-export function getPublicationsForEdition(
-  editionId: string,
-  allPublications: Publication[],
-) {
-  return allPublications.filter(
-    (publication) => publication.conferenceEditionId === editionId,
-  );
 }
 
 export function getEditionsForPlace(

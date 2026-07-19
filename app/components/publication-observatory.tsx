@@ -202,7 +202,9 @@ export function PublicationObservatory({ data }: { data: PortfolioData }) {
       }),
     [activeFilter, data.publications, publicationType, selectedPlaceEditionIds],
   );
-  const years = [...new Set(visiblePublications.map((publication) => publication.year))];
+  const years = [...new Set(visiblePublications.map((publication) => publication.year))].sort(
+    (a, b) => b - a,
+  );
   const selectedPublication = selectedId
     ? data.publications.find((publication) => publication.id === selectedId)
     : undefined;

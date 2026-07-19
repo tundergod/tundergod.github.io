@@ -7,7 +7,6 @@ import {
   getEditionForPublication,
   getEditionsForPlace,
   getPlaceForEdition,
-  getPublicationsForEdition,
   getPublicationsForPlace,
 } from "../app/lib/conference-model.ts";
 import { loadContent } from "../scripts/load-content.ts";
@@ -22,7 +21,7 @@ const {
 test("topic, conference edition, and publication type filters intersect", () => {
   const filtered = filterPublications(publications, {
     topic: "memory-storage",
-    editionId: "dac-2026",
+    editionIds: ["dac-2026"],
     type: "conference",
   });
 
@@ -33,7 +32,7 @@ test("topic, conference edition, and publication type filters intersect", () => 
   assert.deepEqual(
     filterPublications(publications, {
       topic: "memory-storage",
-      editionId: "dac-2026",
+      editionIds: ["dac-2026"],
       type: "journal",
     }),
     [],
@@ -58,7 +57,11 @@ test("GraphISC appears once with journal and conference venue tags", () => {
 });
 
 test("the shared embedded-systems edition groups distinct papers", () => {
-  const papers = getPublicationsForEdition("esweek-2026", publications);
+  const papers = filterPublications(publications, {
+    topic: "All",
+    editionIds: ["esweek-2026"],
+    type: "All",
+  });
   assert.deepEqual(
     papers.map((paper) => paper.id).sort(),
     ["graphisc-tcad-2026", "winhd-cases-2026"],
