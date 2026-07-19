@@ -330,6 +330,7 @@ export function PublicationObservatory({ data }: { data: PortfolioData }) {
             places={data.locations}
             publications={data.publications}
             onSelectPlace={selectPlace}
+            selectionSignature={`${selectedPlaceId ?? ""}:${selectedId ?? ""}`}
           />
 
           {selectedPublication ? (

@@ -40,6 +40,7 @@ type ConferenceGlobeProps = {
   onSelectPlace: (placeId: string) => void;
   places: Location[];
   publications: Publication[];
+  selectionSignature?: string;
 };
 
 function easeAngle(current: number, target: number, amount: number) {
@@ -89,6 +90,7 @@ export function ConferenceGlobe({
   onSelectPlace,
   places,
   publications,
+  selectionSignature,
 }: ConferenceGlobeProps) {
   const placesWithConferences = useMemo(
     () => places
@@ -389,16 +391,20 @@ export function ConferenceGlobe({
   }, [onSelectPlace, stopJourney]);
 
   // External selections (publication-row clicks, "All conferences") change
-  // activePlaceId without going through handleSelectPlace. Interrupt any
-  // active playback so it doesn't clobber the user's choice on its next
-  // landing. This is a no-op on normal journey completion, because
-  // handleFinishRef nulls playbackRef.current before calling onSelectPlace,
-  // which is what drives activePlaceId in the parent.
+  // selectionSignature without going through handleSelectPlace — including
+  // clicking a publication row that resolves to the SAME place, which
+  // would leave activePlaceId unchanged and miss the interrupt if keyed on
+  // that alone. selectionSignature combines both the selected place and
+  // the selected publication, so it changes on every such interaction.
+  // Interrupt any active playback so it doesn't clobber the user's choice
+  // on its next landing. This is a no-op on normal journey completion,
+  // because handleFinishRef nulls playbackRef.current before calling
+  // onSelectPlace, which is what drives selectionSignature in the parent.
   useEffect(() => {
     if (playbackRef.current) {
       stopJourney();
     }
-  }, [activePlaceId, stopJourney]);
+  }, [selectionSignature, stopJourney]);
 
   // `new Date()` seeds a one-time clock for deriving past/upcoming timeline
   // status via the lazy useState initializer, which the React Compiler
