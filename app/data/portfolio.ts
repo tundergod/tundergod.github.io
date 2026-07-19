@@ -37,6 +37,13 @@ export type ConferenceEdition = {
   placeId: string;
 };
 
+export const researchAreaLabels: Record<ResearchArea, string> = {
+  Storage: "Memory / Storage",
+  Architecture: "Architecture",
+  Intermittent: "Embedded",
+  Robotics: "Robotics",
+};
+
 export const places: Place[] = [
   { id: "san-jose", city: "San Jose", region: "California", country: "USA", latitude: 37.3382, longitude: -121.8863 },
   { id: "barcelona", city: "Barcelona", country: "Spain", latitude: 41.3874, longitude: 2.1686 },

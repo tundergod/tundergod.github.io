@@ -5,13 +5,16 @@ import {
   conferenceEditions,
   places,
   publications,
+  researchAreaLabels,
 } from "../app/data/portfolio.ts";
 import {
   filterPublications,
+  getEditionIdsForPlace,
   getEditionForPublication,
   getEditionsForPlace,
   getPlaceForEdition,
   getPublicationsForEdition,
+  getPublicationsForPlace,
 } from "../app/lib/conference-model.ts";
 
 test("topic, conference edition, and publication type filters intersect", () => {
@@ -104,6 +107,62 @@ test("one place can host several distinct conference editions", () => {
   };
   const withRepeat = [...conferenceEditions, hypotheticalRepeat];
   assert.equal(getEditionsForPlace("san-francisco", withRepeat).length, 2);
+});
+
+test("place filters include every edition at one location", () => {
+  const sampleEditions = [
+    { id: "event-2026", placeId: "shared-place" },
+    { id: "event-2025", placeId: "shared-place" },
+    { id: "elsewhere", placeId: "other-place" },
+  ];
+  const samplePublications = [
+    { ...publications[0], id: "paper-2026", conferenceEditionId: "event-2026" },
+    { ...publications[1], id: "paper-2025", conferenceEditionId: "event-2025" },
+    { ...publications[2], id: "other-paper", conferenceEditionId: "elsewhere" },
+  ];
+  const editionIds = getEditionIdsForPlace("shared-place", sampleEditions);
+
+  const result = filterPublications(samplePublications, {
+    area: "All",
+    editionIds,
+    type: "All",
+  });
+
+  assert.deepEqual(result.map((paper) => paper.id), ["paper-2026", "paper-2025"]);
+});
+
+test("place publication counts deduplicate publication IDs", () => {
+  const sampleEditions = [
+    { id: "event-2026", placeId: "shared-place" },
+    { id: "event-2025", placeId: "shared-place" },
+  ];
+  const paper2026 = {
+    ...publications[0],
+    id: "paper-2026",
+    conferenceEditionId: "event-2026",
+  };
+  const paper2025 = {
+    ...publications[1],
+    id: "paper-2025",
+    conferenceEditionId: "event-2025",
+  };
+
+  const result = getPublicationsForPlace(
+    "shared-place",
+    sampleEditions,
+    [paper2026, paper2026, paper2025],
+  );
+
+  assert.deepEqual(result.map((paper) => paper.id), ["paper-2026", "paper-2025"]);
+});
+
+test("research areas expose reader-facing labels", () => {
+  assert.deepEqual(researchAreaLabels, {
+    Storage: "Memory / Storage",
+    Architecture: "Architecture",
+    Intermittent: "Embedded",
+    Robotics: "Robotics",
+  });
 });
 
 test("journal publications do not invent a conference location", () => {
