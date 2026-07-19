@@ -47,7 +47,7 @@ test("GraphISC appears once with journal and conference venue tags", () => {
 
   const paper = graphiscPapers[0];
   assert.ok(paper);
-  assert.deepEqual(paper.venueTags, ["TCAD", "CASES / EMSOFT / CODES"]);
+  assert.deepEqual(paper.venueTags, ["TCAD", "CASES"]);
 
   const edition = getEditionForPublication(paper, conferenceEditions);
   assert.equal(edition?.id, "esweek-2026");

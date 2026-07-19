@@ -5,7 +5,7 @@
     "authors": ["Ssu-Hao Tsai", "Wen Sheng Lim", "Liang-Chi Chen", "Tei-Wei Kuo", "Yuan-Hao Chang"],
     "year": 2026,
     "type": "journal",
-    "venueTags": ["TCAD", "CASES / EMSOFT / CODES"],
+    "venueTags": ["TCAD", "CASES"],
     "venueLong": "IEEE Transactions on Computer-Aided Design of Integrated Circuits and Systems",
     "doi": null,
     "topics": ["memory-storage", "architecture"],
