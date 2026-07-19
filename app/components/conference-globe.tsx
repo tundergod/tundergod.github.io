@@ -2,6 +2,7 @@
 
 import createGlobe, { type Arc, type Marker } from "cobe";
 import {
+  Fragment,
   useCallback,
   useEffect,
   useMemo,
@@ -152,9 +153,6 @@ export function ConferenceGlobe({
       : { phi: 0.45, theta: 0.22 },
   );
   const [isPlaying, setIsPlaying] = useState(false);
-  // playbackLeg is consumed by the Task 3 timeline nodes rendered inside
-  // .journey-strip; this component only needs to keep it up to date.
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [playbackLeg, setPlaybackLeg] = useState(-1);
 
   const handleFinishRef = useRef(() => {});
@@ -396,6 +394,16 @@ export function ConferenceGlobe({
     onSelectPlace(placeId);
   }, [onSelectPlace, stopJourney]);
 
+  // `new Date()` seeds a one-time clock for deriving past/upcoming timeline
+  // status via the lazy useState initializer, which the React Compiler
+  // purity rule accepts since it only runs once, on mount.
+  const [timelineNow] = useState(() => new Date());
+  const timelineStops = useMemo(
+    () => getJourneyStops(conferenceEditions, places, timelineNow),
+    [conferenceEditions, places, timelineNow],
+  );
+  const nextUpcomingEditionId = getNextUpcomingStop(timelineStops)?.edition.id;
+
   function pauseGlobeInteraction() {
     interactionPausedRef.current = true;
   }
@@ -565,6 +573,31 @@ export function ConferenceGlobe({
         <button className="journey-play" type="button" onClick={startJourney}>
           {isPlaying ? "Stop journey" : "Play journey"}
         </button>
+        <div className="journey-timeline" role="group" aria-label="Conference journey timeline">
+          {timelineStops.map((stop, index) => {
+            const previousStop = timelineStops[index - 1];
+            const showYear = !previousStop || previousStop.edition.year !== stop.edition.year;
+            const classNames = ["journey-node", stop.status === "past" ? "is-past" : "is-upcoming"];
+            if (stop.edition.id === nextUpcomingEditionId) classNames.push("is-next");
+            if (stop.place.id === activePlaceId) classNames.push("is-current");
+            if (isPlaying && index === playbackLeg) classNames.push("is-playing");
+            return (
+              <Fragment key={stop.edition.id}>
+                {showYear && (
+                  <span className="journey-year" aria-hidden="true">{stop.edition.year}</span>
+                )}
+                <button
+                  className={classNames.join(" ")}
+                  type="button"
+                  suppressHydrationWarning
+                  aria-label={`${stop.edition.series} ${stop.edition.year}, ${stop.place.city}`}
+                  aria-pressed={stop.place.id === activePlaceId}
+                  onClick={() => handleSelectPlace(stop.place.id)}
+                />
+              </Fragment>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

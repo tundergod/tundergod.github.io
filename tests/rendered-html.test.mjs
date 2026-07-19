@@ -298,3 +298,13 @@ test("renders SEO metadata, structured data, and a CV header link", async () => 
 
   assert.match(html, /href="\/tundergod_CV\.pdf"[^>]*>\s*CV/);
 });
+
+test("journey playback control and timeline are rendered", async () => {
+  const response = await render();
+  const html = await response.text();
+  assert.match(html, /Play journey/);
+  const nodeCount = (html.match(/journey-node/g) ?? []).length;
+  assert.ok(nodeCount >= 8, `expected 8 timeline nodes, saw ${nodeCount}`);
+  assert.match(html, /ICCAD 2023, San Francisco/);
+  assert.match(html, /DAC 2026, Long Beach/);
+});
