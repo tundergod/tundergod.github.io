@@ -36,8 +36,9 @@ New pure functions, unit-testable with an injected `now: Date`:
 
 ## Playback (`app/components/conference-globe.tsx`)
 
-- "Play journey" control rendered by the globe unit (placed via the existing
-  `panel-kicker` row in `publication-observatory.tsx`); toggles to "Stop" while
+- "Play journey" control rendered by the globe unit, at the left end of the
+  journey strip under the globe frame (next to the timeline, keeping the
+  feature self-contained in `ConferenceGlobe`); toggles to "Stop" while
   playing. Any stop-click, place selection, or second press interrupts playback
   and returns to the normal ambient/selected state.
 - Flight: reuse the existing `easeAngle` render-loop easing. Sequence through
