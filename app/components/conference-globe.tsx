@@ -1,7 +1,14 @@
 "use client";
 
 import createGlobe, { type Marker } from "cobe";
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type FocusEvent,
+} from "react";
 import { createPortal } from "react-dom";
 
 import type { ConferenceEdition, Place, Publication } from "../data/portfolio";
@@ -9,6 +16,11 @@ import {
   coordinatesToAngles,
   getPublicationsForPlace,
 } from "../lib/conference-model";
+import {
+  groupOverlappingLabels,
+  type LabelGroup,
+  type LabelRect,
+} from "../lib/globe-label-collisions";
 
 type ConferenceGlobeProps = {
   activePlace?: Place;
@@ -26,6 +38,16 @@ function easeAngle(current: number, target: number, amount: number) {
   return current + difference * amount;
 }
 
+function getAnchorStyle(placeId: string) {
+  return {
+    "--marker-visibility": `var(--cobe-visible-${placeId}, 0)`,
+    positionAnchor: `--cobe-${placeId}`,
+  } as CSSProperties & {
+    "--marker-visibility": string;
+    positionAnchor: string;
+  };
+}
+
 export function ConferenceGlobe({
   activePlace,
   activePlaceId,
@@ -34,15 +56,57 @@ export function ConferenceGlobe({
   places,
   publications,
 }: ConferenceGlobeProps) {
+  const placesWithConferences = useMemo(
+    () => places
+      .map((place) => {
+        const editions = conferenceEditions.filter(
+          (edition) => edition.placeId === place.id,
+        ).sort((a, b) => b.year - a.year);
+
+        return {
+          place,
+          editions,
+          editionLabels: [...new Set(editions.map(
+            (edition) => `${edition.series}'${String(edition.year).slice(-2)}`,
+          ))],
+          publications: getPublicationsForPlace(
+            place.id,
+            conferenceEditions,
+            publications,
+          ),
+        };
+      })
+      .filter(({ editions }) => editions.length > 0),
+    [conferenceEditions, places, publications],
+  );
+  const placeDetailsById = useMemo(
+    () => new Map(
+      placesWithConferences.map((details) => [details.place.id, details]),
+    ),
+    [placesWithConferences],
+  );
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const frameRef = useRef<HTMLDivElement>(null);
   const [labelHost, setLabelHost] = useState<HTMLElement | null>(null);
+  const [labelGroups, setLabelGroups] = useState<LabelGroup[]>(
+    () => placesWithConferences.map(({ place }) => ({
+      representativeId: place.id,
+      placeIds: [place.id],
+    })),
+  );
+  const [expandedGroupId, setExpandedGroupId] = useState<string | null>(null);
+  const labelGroupsRef = useRef(labelGroups);
+  const interactionPausedRef = useRef(false);
   const activePlaceRef = useRef(activePlace);
   const targetRef = useRef(
     activePlace
       ? coordinatesToAngles(activePlace.latitude, activePlace.longitude)
       : { phi: 0.45, theta: 0.22 },
   );
+
+  useEffect(() => {
+    labelGroupsRef.current = labelGroups;
+  }, [labelGroups]);
 
   useEffect(() => {
     activePlaceRef.current = activePlace;
@@ -66,9 +130,10 @@ export function ConferenceGlobe({
     let phi = targetRef.current.phi;
     let theta = targetRef.current.theta;
     let animationFrame = 0;
+    let collisionFrame = 0;
 
     const buildMarkers = (): Marker[] =>
-      places.map((place) => ({
+      placesWithConferences.map(({ place }) => ({
         id: place.id,
         location: [place.latitude, place.longitude] as [number, number],
         size: activePlaceRef.current?.id === place.id ? 0.085 : 0.045,
@@ -99,12 +164,56 @@ export function ConferenceGlobe({
     });
     setLabelHost(canvas.parentElement);
 
+    const updateLabelGroups = () => {
+      const host = canvas.parentElement;
+      if (!host) return;
+      const rootStyle = getComputedStyle(document.documentElement);
+      const rectangles: LabelRect[] = placesWithConferences.map(({ place }) => {
+        const anchor = Array.from(host.children).find((element) =>
+          (element as HTMLElement).style.getPropertyValue("anchor-name") ===
+            `--cobe-${place.id}`
+        ) as HTMLElement | undefined;
+        const anchorRect = anchor?.getBoundingClientRect();
+        const width = Math.max(54, place.city.length * 5.8 + 18);
+        const height = 24;
+        const left = (anchorRect?.left ?? 0) - width / 2;
+        const top = (anchorRect?.top ?? 0) - height - 6;
+
+        return {
+          id: place.id,
+          left,
+          top,
+          right: left + width,
+          bottom: top + height,
+          visible:
+            rootStyle
+              .getPropertyValue(`--cobe-visible-${place.id}`)
+              .trim() === "1",
+        };
+      });
+      const nextGroups = groupOverlappingLabels(
+        rectangles,
+        activePlaceRef.current?.id,
+      );
+      if (JSON.stringify(nextGroups) !== JSON.stringify(labelGroupsRef.current)) {
+        labelGroupsRef.current = nextGroups;
+        setLabelGroups(nextGroups);
+        setExpandedGroupId((current) =>
+          nextGroups.some(
+            (group) =>
+              current ===
+                `${activePlaceRef.current?.id ?? "ambient"}:${group.representativeId}`,
+          ) ? current : null
+        );
+      }
+    };
+
     const render = () => {
       const target = targetRef.current;
       if (activePlaceRef.current) {
         phi = easeAngle(phi, target.phi, reducedMotion ? 1 : 0.045);
         theta += (target.theta - theta) * (reducedMotion ? 1 : 0.045);
-      } else if (!reducedMotion) {
+      } else if (!reducedMotion && !interactionPausedRef.current) {
         phi += 0.0022;
       }
 
@@ -116,6 +225,8 @@ export function ConferenceGlobe({
         markers: buildMarkers(),
         arcs: [],
       });
+      if (collisionFrame % 8 === 0) updateLabelGroups();
+      collisionFrame += 1;
       animationFrame = requestAnimationFrame(render);
     };
 
@@ -130,68 +241,126 @@ export function ConferenceGlobe({
       resizeObserver.disconnect();
       globe.destroy();
     };
-  }, [places]);
+  }, [placesWithConferences]);
 
-  const placesWithConferences = places
-    .map((place) => {
-      const editions = conferenceEditions.filter(
-        (edition) => edition.placeId === place.id,
-      ).sort((a, b) => b.year - a.year);
+  function pauseGlobeInteraction() {
+    interactionPausedRef.current = true;
+  }
 
-      return {
-        place,
-        editions,
-        editionLabels: [...new Set(editions.map(
-          (edition) => `${edition.series}'${String(edition.year).slice(-2)}`,
-        ))],
-        publications: getPublicationsForPlace(
-          place.id,
-          conferenceEditions,
-          publications,
-        ),
-      };
-    })
-    .filter(({ editions }) => editions.length > 0);
+  function resumeGlobeInteraction() {
+    interactionPausedRef.current = false;
+  }
+
+  function handleLabelBlur(event: FocusEvent<HTMLDivElement>) {
+    if (!event.currentTarget.contains(event.relatedTarget)) {
+      resumeGlobeInteraction();
+      setExpandedGroupId(null);
+    }
+  }
+
+  function renderPlaceLabel(
+    details: (typeof placesWithConferences)[number],
+  ) {
+    const { place, editionLabels, publications: placePublications } = details;
+    return (
+      <div
+        className="globe-label-stack"
+        key={place.id}
+        style={getAnchorStyle(place.id)}
+        onPointerEnter={pauseGlobeInteraction}
+        onPointerLeave={resumeGlobeInteraction}
+        onFocus={pauseGlobeInteraction}
+        onBlur={handleLabelBlur}
+      >
+        <button
+          className={
+            place.id === activePlaceId
+              ? "globe-place-button is-active"
+              : "globe-place-button"
+          }
+          type="button"
+          aria-pressed={place.id === activePlaceId}
+          onClick={() => onSelectPlace(place.id)}
+        >
+          <span className="globe-label-city">{place.city}</span>
+          <span className="globe-place-details">
+            <span className="globe-label-editions">
+              {editionLabels.join(", ")}
+            </span>
+            <span className="globe-label-count">
+              {placePublications.length} {placePublications.length === 1
+                ? "publication"
+                : "publications"}
+            </span>
+            <span className="globe-label-country">{place.country}</span>
+          </span>
+        </button>
+      </div>
+    );
+  }
 
   const labelLayer = (
     <div className="globe-label-layer">
-      {placesWithConferences.map(({ place, editionLabels, publications: placePublications }) => {
-        const anchorStyle = {
-          "--marker-visibility": `var(--cobe-visible-${place.id}, 0)`,
-          positionAnchor: `--cobe-${place.id}`,
-        } as CSSProperties & {
-          "--marker-visibility": string;
-          positionAnchor: string;
-        };
+      {labelGroups.map((group) => {
+        const representative = placeDetailsById.get(group.representativeId);
+        if (!representative) return null;
+        if (group.placeIds.length === 1) {
+          return renderPlaceLabel(representative);
+        }
+
+        const groupKey = `${activePlaceId ?? "ambient"}:${group.representativeId}`;
+        const expanded = expandedGroupId === groupKey;
         return (
           <div
-            className="globe-label-stack"
-            key={place.id}
-            style={anchorStyle}
+            className="globe-label-stack globe-label-cluster"
+            key={group.representativeId}
+            style={getAnchorStyle(group.representativeId)}
+            onPointerEnter={pauseGlobeInteraction}
+            onPointerLeave={() => {
+              resumeGlobeInteraction();
+              setExpandedGroupId(null);
+            }}
+            onFocus={pauseGlobeInteraction}
+            onBlur={handleLabelBlur}
           >
             <button
-              className={
-                place.id === activePlaceId
-                  ? "globe-place-button is-active"
-                  : "globe-place-button"
-              }
+              className="globe-cluster-button"
               type="button"
-              aria-pressed={place.id === activePlaceId}
-              onClick={() => onSelectPlace(place.id)}
+              aria-expanded={expanded}
+              onClick={() => setExpandedGroupId(
+                expanded ? null : groupKey,
+              )}
+              onPointerEnter={() => setExpandedGroupId(groupKey)}
+              onFocus={() => setExpandedGroupId(groupKey)}
             >
-              <span className="globe-label-city">{place.city}</span>
-              <span className="globe-place-details">
-                <span className="globe-label-editions">
-                  {editionLabels.join(", ")}
-                </span>
-                <span className="globe-label-count">
-                  {placePublications.length} {placePublications.length === 1
-                    ? "publication"
-                    : "publications"}
-                </span>
-                <span className="globe-label-country">{place.country}</span>
-              </span>
+              {group.placeIds.length}
+              <span className="sr-only"> nearby conference places</span>
             </button>
+            {expanded ? (
+              <div className="globe-cluster-menu">
+                {group.placeIds.map((placeId) => {
+                  const details = placeDetailsById.get(placeId);
+                  if (!details) return null;
+                  const paperCount = details.publications.length;
+                  return (
+                    <button
+                      type="button"
+                      key={placeId}
+                      onClick={() => {
+                        setExpandedGroupId(null);
+                        onSelectPlace(details.place.id);
+                      }}
+                    >
+                      <span>{details.place.city}</span>
+                      <small>
+                        {details.editionLabels.join(", ")} · {paperCount}{" "}
+                        {paperCount === 1 ? "publication" : "publications"}
+                      </small>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : null}
           </div>
         );
       })}
@@ -200,7 +369,15 @@ export function ConferenceGlobe({
 
   return (
     <div className="globe-unit">
-      <div className="globe-frame" ref={frameRef}>
+      <div
+        className="globe-frame"
+        ref={frameRef}
+        onPointerDown={(event) => {
+          if (!(event.target as Element).closest(".globe-label-cluster")) {
+            setExpandedGroupId(null);
+          }
+        }}
+      >
         <canvas ref={canvasRef} className="globe-canvas" aria-hidden="true" />
         <div className="globe-orbit globe-orbit-one" aria-hidden="true" />
         <div className="globe-orbit globe-orbit-two" aria-hidden="true" />

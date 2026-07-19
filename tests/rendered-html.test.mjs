@@ -81,7 +81,7 @@ test("keeps place controls inside a globe with no routes", async () => {
     new URL("../app/components/conference-globe.tsx", import.meta.url),
     "utf8",
   );
-  const frameStart = globeSource.indexOf('<div className="globe-frame"');
+  const frameStart = globeSource.indexOf('className="globe-frame"');
   const frameEnd = globeSource.indexOf("\n      </div>", frameStart);
   const fallbackStart = globeSource.indexOf(
     '<div className="conference-index-fallback"',
@@ -152,6 +152,21 @@ test("renders one complete focus card for every selected publication", async () 
   assert.match(source, /publication-focus-doi/);
   assert.doesNotMatch(source, /has no conference location attached/);
   assert.doesNotMatch(source, /!publicationEdition && selectedPublication/);
+});
+
+test("renders expandable collision groups from COBE marker anchors", async () => {
+  const source = await readFile(
+    new URL("../app/components/conference-globe.tsx", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(source, /groupOverlappingLabels/);
+  assert.match(source, /globe-cluster-button/);
+  assert.match(source, /globe-cluster-menu/);
+  assert.match(source, /aria-expanded/);
+  assert.match(source, /onPointerEnter/);
+  assert.match(source, /onFocus/);
+  assert.match(source, /onSelectPlace\(details\.place\.id\)/);
 });
 
 test("removes the disposable starter preview", async () => {

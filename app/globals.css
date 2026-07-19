@@ -902,7 +902,7 @@ button {
   background: rgba(7, 9, 12, 0.86);
   box-shadow: 0 5px 18px rgba(0, 0, 0, 0.28);
   font-family: var(--font-geist-mono), monospace;
-  font-size: 7px;
+  font-size: 9px;
   line-height: 1.35;
   letter-spacing: 0.07em;
   text-align: left;
@@ -960,6 +960,7 @@ button {
 
 .globe-label-editions {
   color: var(--journey);
+  font-size: 8px;
   white-space: normal;
 }
 
@@ -967,13 +968,78 @@ button {
 .globe-label-country {
   margin-top: 3px;
   color: var(--steel-light);
-  font-size: 6px;
+  font-size: 8px;
   letter-spacing: 0.04em;
   text-transform: none;
 }
 
 .globe-label-count {
   color: var(--muted);
+}
+
+.globe-label-cluster {
+  z-index: 3;
+}
+
+.globe-cluster-button {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--journey);
+  border-radius: 50%;
+  color: var(--journey);
+  background: rgba(7, 9, 12, 0.94);
+  box-shadow: 0 0 14px rgba(255, 138, 116, 0.24);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 9px;
+  cursor: pointer;
+}
+
+.globe-cluster-button:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+
+.globe-cluster-menu {
+  position: absolute;
+  left: 50%;
+  bottom: 32px;
+  width: max-content;
+  max-width: min(230px, 70vw);
+  display: grid;
+  padding: 5px;
+  border: 1px solid rgba(124, 199, 255, 0.38);
+  background: rgba(7, 9, 12, 0.96);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.42);
+  transform: translateX(-50%);
+}
+
+.globe-cluster-menu button {
+  display: grid;
+  gap: 3px;
+  padding: 7px 8px;
+  border: 0;
+  color: var(--ice);
+  background: transparent;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 9px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.globe-cluster-menu button:hover,
+.globe-cluster-menu button:focus-visible {
+  color: var(--journey);
+  background: rgba(255, 138, 116, 0.08);
+  outline: 1px solid var(--journey);
+}
+
+.globe-cluster-menu small {
+  color: var(--muted);
+  font-size: 8px;
+  white-space: nowrap;
 }
 
 .conference-index-fallback {
