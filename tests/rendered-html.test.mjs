@@ -121,6 +121,30 @@ test("portals interactive place labels into the COBE anchor host", async () => {
   assert.match(globalStyles, /\.globe-label-stack:has\(\.globe-place-button\.is-active\)[^{]*{[^}]*z-index:\s*2;/s);
 });
 
+test("keeps publication metadata in the approved title flow", async () => {
+  const source = await readFile(
+    new URL("../app/components/publication-observatory.tsx", import.meta.url),
+    "utf8",
+  );
+  const titleLineStart = source.indexOf('className="publication-title-line"');
+  const secondaryLineStart = source.indexOf(
+    'className="publication-secondary-line"',
+    titleLineStart,
+  );
+  const titleLine = source.slice(titleLineStart, secondaryLineStart);
+  const secondaryLine = source.slice(
+    secondaryLineStart,
+    source.indexOf("</span>\n      </span>", secondaryLineStart),
+  );
+
+  assert.ok(titleLineStart >= 0);
+  assert.ok(secondaryLineStart > titleLineStart);
+  assert.ok(titleLine.indexOf("publication-type-tag") < titleLine.indexOf("publication.areas"));
+  assert.ok(titleLine.indexOf("publication.areas") < titleLine.indexOf("publication-doi"));
+  assert.match(titleLine, /publication-topic-tag/);
+  assert.doesNotMatch(secondaryLine, /publication-topic-tags|publication-topic-tag/);
+});
+
 test("keeps enlarged bibliographic tags in the title text flow", async () => {
   const styles = await readFile(
     new URL("../app/globals.css", import.meta.url),

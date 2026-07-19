@@ -86,6 +86,11 @@ function PublicationRow({
           <span className="publication-type-tag">
             {publication.type === "journal" ? "Journal" : "Conference"}
           </span>
+          {publication.areas.map((area) => (
+            <span className="publication-topic-tag" key={area}>
+              {researchAreaLabels[area]}
+            </span>
+          ))}
           {publication.doi && (
             <a
               className="publication-doi"
@@ -102,13 +107,6 @@ function PublicationRow({
         <span className="publication-secondary-line">
           <span className="publication-authors">
             <AuthorLine authors={publication.authors} />
-          </span>
-          <span className="publication-topic-tags">
-            {publication.areas.map((area) => (
-              <span className="publication-topic-tag" key={area}>
-                {researchAreaLabels[area]}
-              </span>
-            ))}
           </span>
         </span>
       </span>
