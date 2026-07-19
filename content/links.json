@@ -12,6 +12,12 @@
     "placement": "header"
   },
   {
+    "id": "header-cv",
+    "label": "CV",
+    "url": "/tundergod_CV.pdf",
+    "placement": "header"
+  },
+  {
     "id": "header-contact",
     "label": "Contact",
     "url": "mailto:tundergod1882@gmail.com",

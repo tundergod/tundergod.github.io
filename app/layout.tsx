@@ -14,11 +14,28 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://tundergod.github.io"),
   title: portfolioData.bio.seoTitle,
   description: portfolioData.bio.seoDescription,
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
+  },
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: portfolioData.bio.seoTitle,
+    description: portfolioData.bio.seoDescription,
+    url: "/",
+    siteName: portfolioData.bio.name,
+    type: "profile",
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary",
+    title: portfolioData.bio.seoTitle,
+    description: portfolioData.bio.seoDescription,
   },
 };
 

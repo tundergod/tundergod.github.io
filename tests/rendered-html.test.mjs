@@ -252,3 +252,49 @@ test("insets the mobile globe so anchored callouts do not widen the page", async
 test("removes the disposable starter preview", async () => {
   await assert.rejects(access(new URL("../app/_sites-preview", templateRoot)));
 });
+
+test("renders SEO metadata, structured data, and a CV header link", async () => {
+  const response = await render();
+  const html = await response.text();
+
+  assert.match(html, /<link rel="canonical" href="https:\/\/tundergod\.github\.io\/?"/);
+  assert.match(
+    html,
+    /<meta property="og:title" content="Wen Sheng Lim — Computer Systems Research"/,
+  );
+  assert.match(
+    html,
+    /<meta property="og:description" content="Research, publications, and conference journeys by Wen Sheng Lim, a computer systems researcher in Taipei\."/,
+  );
+  assert.match(html, /<meta property="og:url" content="https:\/\/tundergod\.github\.io\/?"/);
+  assert.match(html, /<meta property="og:type" content="profile"/);
+  assert.match(html, /<meta name="twitter:card" content="summary"/);
+  assert.doesNotMatch(html, /<meta property="og:image"/);
+
+  assert.match(html, /<script type="application\/ld\+json">/);
+  const jsonLdMatch = html.match(
+    /<script type="application\/ld\+json">([\s\S]*?)<\/script>/,
+  );
+  assert.ok(jsonLdMatch, "expected a JSON-LD script tag");
+  const structuredData = JSON.parse(jsonLdMatch[1]);
+  const graph = structuredData["@graph"];
+  const person = graph.find((entry) => entry["@type"] === "Person");
+  assert.equal(person.name, "Wen Sheng Lim");
+  assert.equal(person.jobTitle, "PhD candidate");
+  assert.equal(person.affiliation["@type"], "Organization");
+  assert.equal(person.affiliation.name, "National Taiwan University (NTU)");
+  assert.equal(person.url, "https://tundergod.github.io");
+  assert.ok(person.sameAs.includes("https://github.com/tundergod"));
+  assert.ok(!person.sameAs.some((url) => url.startsWith("mailto:")));
+  assert.ok(!person.sameAs.some((url) => url.includes("tundergod_CV.pdf")));
+
+  const articles = graph.filter((entry) => entry["@type"] === "ScholarlyArticle");
+  assert.ok(articles.length >= 1);
+  const withDoi = articles.find((article) => article.identifier);
+  assert.ok(withDoi);
+  assert.match(withDoi.identifier, /^https:\/\/doi\.org\//);
+  assert.ok(Array.isArray(withDoi.author));
+  assert.equal(withDoi.author[0]["@type"], "Person");
+
+  assert.match(html, /href="\/tundergod_CV\.pdf"[^>]*>\s*CV/);
+});

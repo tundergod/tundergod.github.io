@@ -239,13 +239,20 @@ function validateLinks(value: unknown, problems: string[]): ProfileLink[] {
       problems.push(`${label}.placement: expected "header" or "footer"`);
     }
     const url = readString(record.url, `${label}.url`, problems);
-    try {
-      const protocol = new URL(url).protocol;
-      if (protocol !== "https:" && protocol !== "mailto:") {
-        problems.push(`${label}.url: expected an https: or mailto: URL`);
+    const isRootRelative = url.startsWith("/") && !url.startsWith("//");
+    if (!isRootRelative) {
+      try {
+        const protocol = new URL(url).protocol;
+        if (protocol !== "https:" && protocol !== "mailto:") {
+          problems.push(
+            `${label}.url: expected an https:, mailto:, or root-relative URL`,
+          );
+        }
+      } catch {
+        problems.push(
+          `${label}.url: expected an https:, mailto:, or root-relative URL`,
+        );
       }
-    } catch {
-      problems.push(`${label}.url: expected an https: or mailto: URL`);
     }
     return {
       id: readString(record.id, `${label}.id`, problems),

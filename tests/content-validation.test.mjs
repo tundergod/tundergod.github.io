@@ -140,3 +140,54 @@ test("exposes validation errors as ContentValidationError", () => {
     (error) => error instanceof ContentValidationError,
   );
 });
+
+test("accepts root-relative link URLs but rejects other non-https/mailto forms", () => {
+  const relative = validContent();
+  relative.links.push({
+    id: "header-cv",
+    label: "CV",
+    url: "/tundergod_CV.pdf",
+    placement: "header",
+  });
+  const result = validatePortfolioData(relative);
+  assert.equal(
+    result.links.find((link) => link.id === "header-cv").url,
+    "/tundergod_CV.pdf",
+  );
+
+  const badScheme = validContent();
+  badScheme.links.push({
+    id: "header-cv",
+    label: "CV",
+    url: "ftp://example.com/tundergod_CV.pdf",
+    placement: "header",
+  });
+  assert.throws(
+    () => validatePortfolioData(badScheme),
+    /header-cv.*expected an https:, mailto:, or root-relative URL/s,
+  );
+
+  const notRootRelative = validContent();
+  notRootRelative.links.push({
+    id: "header-cv",
+    label: "CV",
+    url: "tundergod_CV.pdf",
+    placement: "header",
+  });
+  assert.throws(
+    () => validatePortfolioData(notRootRelative),
+    /header-cv.*expected an https:, mailto:, or root-relative URL/s,
+  );
+
+  const protocolRelative = validContent();
+  protocolRelative.links.push({
+    id: "header-cv",
+    label: "CV",
+    url: "//example.com/tundergod_CV.pdf",
+    placement: "header",
+  });
+  assert.throws(
+    () => validatePortfolioData(protocolRelative),
+    /header-cv.*expected an https:, mailto:, or root-relative URL/s,
+  );
+});
