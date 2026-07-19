@@ -72,13 +72,6 @@ function easeInOutCubic(t: number) {
   return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
 }
 
-function interpolateAngle(from: number, to: number, t: number) {
-  let difference = to - from;
-  while (difference > Math.PI) difference -= Math.PI * 2;
-  while (difference < -Math.PI) difference += Math.PI * 2;
-  return from + difference * t;
-}
-
 function getAnchorStyle(placeId: string) {
   return {
     "--marker-visibility": `var(--cobe-visible-${placeId}, 0)`,
@@ -285,7 +278,7 @@ export function ConferenceGlobe({
         );
         const eased = easeInOutCubic(progress);
         const target = coordinatesToAngles(stop.place.latitude, stop.place.longitude);
-        phi = interpolateAngle(playback.from.phi, target.phi, eased);
+        phi = easeAngle(playback.from.phi, target.phi, eased);
         theta = playback.from.theta + (target.theta - playback.from.theta) * eased;
         highlightedPlaceId = stop.place.id;
         const previous = stops[playback.legIndex - 1];
@@ -379,6 +372,7 @@ export function ConferenceGlobe({
       handleFinishRef.current();
       return;
     }
+    arcsRef.current = [];
     playbackRef.current = {
       legIndex: 0,
       legStartedAt: performance.now(),
@@ -393,6 +387,18 @@ export function ConferenceGlobe({
     stopJourney();
     onSelectPlace(placeId);
   }, [onSelectPlace, stopJourney]);
+
+  // External selections (publication-row clicks, "All conferences") change
+  // activePlaceId without going through handleSelectPlace. Interrupt any
+  // active playback so it doesn't clobber the user's choice on its next
+  // landing. This is a no-op on normal journey completion, because
+  // handleFinishRef nulls playbackRef.current before calling onSelectPlace,
+  // which is what drives activePlaceId in the parent.
+  useEffect(() => {
+    if (playbackRef.current) {
+      stopJourney();
+    }
+  }, [activePlaceId, stopJourney]);
 
   // `new Date()` seeds a one-time clock for deriving past/upcoming timeline
   // status via the lazy useState initializer, which the React Compiler
