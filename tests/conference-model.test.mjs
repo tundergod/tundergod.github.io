@@ -8,6 +8,10 @@ import {
   getEditionsForPlace,
   getPlaceForEdition,
   getPublicationsForPlace,
+  parseEditionStartDate,
+  getJourneyStops,
+  getNextUpcomingStop,
+  interpolateCoordinates,
 } from "../app/lib/conference-model.ts";
 import { loadContent } from "../scripts/load-content.ts";
 
@@ -177,4 +181,46 @@ test("journal publications do not invent a conference location", () => {
   assert.ok(journal);
   assert.equal(journal.type, "journal");
   assert.equal(getEditionForPublication(journal, conferenceEditions), undefined);
+});
+
+test("parses edition start dates from range strings", () => {
+  const base = { id: "x", series: "X", name: "X", placeId: "p" };
+  assert.deepEqual(
+    parseEditionStartDate({ ...base, year: 2026, dates: "Nov. 8–12, 2026" }),
+    new Date(2026, 10, 8),
+  );
+  assert.deepEqual(
+    parseEditionStartDate({ ...base, year: 2023, dates: "Oct. 29–Nov. 2, 2023" }),
+    new Date(2023, 9, 29),
+  );
+  assert.deepEqual(
+    parseEditionStartDate({ ...base, year: 2026, dates: "sometime in 2026" }),
+    new Date(2026, 0, 1),
+  );
+});
+
+test("orders journey stops chronologically and classifies past/upcoming", () => {
+  const now = new Date(2026, 6, 20);
+  const stops = getJourneyStops(conferenceEditions, places, now);
+  assert.equal(stops.length, conferenceEditions.length);
+  assert.equal(stops[0]?.edition.id, "date-2023");
+  assert.equal(stops[1]?.edition.id, "iccad-2023");
+  assert.equal(stops[stops.length - 1]?.edition.id, "iccad-2026");
+  const statuses = new Map(stops.map((stop) => [stop.edition.id, stop.status]));
+  assert.equal(statuses.get("date-2026"), "past");
+  assert.equal(statuses.get("dac-2026"), "upcoming");
+  assert.equal(getNextUpcomingStop(stops)?.edition.id, "dac-2026");
+});
+
+test("getNextUpcomingStop is undefined when every stop is past", () => {
+  const stops = getJourneyStops(conferenceEditions, places, new Date(2030, 0, 1));
+  assert.equal(getNextUpcomingStop(stops), undefined);
+});
+
+test("interpolateCoordinates follows the great circle", () => {
+  assert.deepEqual(interpolateCoordinates([10, 20], [50, 60], 0), [10, 20]);
+  const end = interpolateCoordinates([10, 20], [50, 60], 1);
+  assert.ok(Math.abs(end[0] - 50) < 1e-9 && Math.abs(end[1] - 60) < 1e-9);
+  const mid = interpolateCoordinates([0, 0], [0, 90], 0.5);
+  assert.ok(Math.abs(mid[0] - 0) < 1e-9 && Math.abs(mid[1] - 45) < 1e-9);
 });
