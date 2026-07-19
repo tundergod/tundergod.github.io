@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   groupOverlappingLabels,
+  isCobeMarkerVisible,
   rectanglesOverlap,
 } from "../app/lib/globe-label-collisions.ts";
 
@@ -66,4 +67,10 @@ test("back-facing labels remain stable singletons", () => {
       { representativeId: "antwerp", placeIds: ["antwerp"] },
     ],
   );
+});
+
+test("COBE exposes visible markers with its non-empty CSS token", () => {
+  assert.equal(isCobeMarkerVisible("N"), true);
+  assert.equal(isCobeMarkerVisible(""), false);
+  assert.equal(isCobeMarkerVisible("  "), false);
 });

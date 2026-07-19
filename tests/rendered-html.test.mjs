@@ -166,7 +166,17 @@ test("renders expandable collision groups from COBE marker anchors", async () =>
   assert.match(source, /aria-expanded/);
   assert.match(source, /onPointerEnter/);
   assert.match(source, /onFocus/);
+  assert.match(source, /onClick=\{\(\) => setExpandedGroupId\(groupKey\)\}/);
   assert.match(source, /onSelectPlace\(details\.place\.id\)/);
+});
+
+test("lets globe callouts extend beyond the circular frame", async () => {
+  const styles = await readFile(
+    new URL("../app/globals.css", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(styles, /\.globe-frame\s*{[^}]*overflow:\s*visible;/s);
 });
 
 test("removes the disposable starter preview", async () => {

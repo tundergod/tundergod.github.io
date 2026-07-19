@@ -811,7 +811,7 @@ button {
   aspect-ratio: 1;
   display: grid;
   place-items: center;
-  overflow: hidden;
+  overflow: visible;
   border: 1px solid var(--line);
   border-radius: 50%;
   background:

@@ -21,6 +21,10 @@ export function rectanglesOverlap(a: LabelRect, b: LabelRect, gap = 8) {
   );
 }
 
+export function isCobeMarkerVisible(cssToken: string) {
+  return cssToken.trim().length > 0;
+}
+
 export function groupOverlappingLabels(
   labels: LabelRect[],
   activePlaceId?: string,

@@ -18,6 +18,7 @@ import {
 } from "../lib/conference-model";
 import {
   groupOverlappingLabels,
+  isCobeMarkerVisible,
   type LabelGroup,
   type LabelRect,
 } from "../lib/globe-label-collisions";
@@ -167,7 +168,7 @@ export function ConferenceGlobe({
     const updateLabelGroups = () => {
       const host = canvas.parentElement;
       if (!host) return;
-      const rootStyle = getComputedStyle(document.documentElement);
+      const hostStyle = getComputedStyle(host);
       const rectangles: LabelRect[] = placesWithConferences.map(({ place }) => {
         const anchor = Array.from(host.children).find((element) =>
           (element as HTMLElement).style.getPropertyValue("anchor-name") ===
@@ -185,10 +186,9 @@ export function ConferenceGlobe({
           top,
           right: left + width,
           bottom: top + height,
-          visible:
-            rootStyle
-              .getPropertyValue(`--cobe-visible-${place.id}`)
-              .trim() === "1",
+          visible: isCobeMarkerVisible(
+            hostStyle.getPropertyValue(`--cobe-visible-${place.id}`),
+          ),
         };
       });
       const nextGroups = groupOverlappingLabels(
@@ -327,9 +327,7 @@ export function ConferenceGlobe({
               className="globe-cluster-button"
               type="button"
               aria-expanded={expanded}
-              onClick={() => setExpandedGroupId(
-                expanded ? null : groupKey,
-              )}
+              onClick={() => setExpandedGroupId(groupKey)}
               onPointerEnter={() => setExpandedGroupId(groupKey)}
               onFocus={() => setExpandedGroupId(groupKey)}
             >
