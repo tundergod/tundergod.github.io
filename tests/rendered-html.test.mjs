@@ -88,6 +88,7 @@ test("keeps place controls inside a globe with no routes", async () => {
   );
   const placeDetailsStart = globeSource.indexOf(
     'className="globe-place-details"',
+    fallbackStart,
   );
   const observatorySource = await readFile(
     new URL("../app/components/publication-observatory.tsx", import.meta.url),
@@ -100,6 +101,41 @@ test("keeps place controls inside a globe with no routes", async () => {
   assert.ok(fallbackStart > frameStart && fallbackStart < frameEnd);
   assert.ok(placeDetailsStart > frameStart && placeDetailsStart < frameEnd);
   assert.doesNotMatch(observatorySource, /Focused location|related-block/);
+});
+
+test("portals interactive place labels into the COBE anchor host", async () => {
+  const globeSource = await readFile(
+    new URL("../app/components/conference-globe.tsx", import.meta.url),
+    "utf8",
+  );
+  const globalStyles = await readFile(
+    new URL("../app/globals.css", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(globeSource, /createPortal/);
+  assert.match(globeSource, /canvas\.parentElement/);
+  assert.match(globeSource, /className="globe-label-layer"/);
+  assert.match(globeSource, /createPortal\(labelLayer, labelHost\)/);
+  assert.match(globalStyles, /\.globe-label-layer\s*{[^}]*display:\s*contents;/s);
+  assert.match(globalStyles, /\.globe-label-stack:has\(\.globe-place-button\.is-active\)[^{]*{[^}]*z-index:\s*2;/s);
+});
+
+test("keeps enlarged bibliographic tags in the title text flow", async () => {
+  const styles = await readFile(
+    new URL("../app/globals.css", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(styles, /\.publication-title-line\s*{[^}]*display:\s*block;/s);
+  assert.match(
+    styles,
+    /\.venue-chip,[\s\S]*\.publication-doi\s*{[^}]*min-height:\s*23px;[^}]*font-size:\s*9px;/s,
+  );
+  assert.match(
+    styles,
+    /\.publication-topic-tag\s*{[^}]*font-size:\s*8px;/s,
+  );
 });
 
 test("removes the disposable starter preview", async () => {

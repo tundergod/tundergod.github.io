@@ -652,7 +652,6 @@ button {
   pointer-events: none;
 }
 
-.publication-title-line,
 .publication-secondary-line,
 .publication-topic-tags {
   display: flex;
@@ -661,11 +660,11 @@ button {
 }
 
 .publication-title-line {
-  gap: 5px 7px;
+  display: block;
+  line-height: 1.55;
 }
 
 .publication-title {
-  max-width: 760px;
   font-size: clamp(14px, 1.12vw, 17px);
   font-weight: 500;
   line-height: 1.38;
@@ -703,16 +702,23 @@ button {
 .publication-doi {
   display: inline-flex;
   align-items: center;
-  min-height: 20px;
-  padding: 3px 6px;
   border: 1px solid var(--steel);
   color: var(--muted);
   font-family: var(--font-geist-mono), monospace;
-  font-size: 7px;
   line-height: 1;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   white-space: nowrap;
+}
+
+.venue-chip,
+.publication-type-tag,
+.publication-doi {
+  min-height: 23px;
+  margin-left: 7px;
+  padding: 4px 7px;
+  font-size: 9px;
+  vertical-align: 2px;
 }
 
 .venue-chip {
@@ -720,8 +726,11 @@ button {
 }
 
 .publication-topic-tag {
+  min-height: 21px;
+  padding: 3px 6px;
   border-color: rgba(124, 199, 255, 0.24);
   color: var(--signal);
+  font-size: 8px;
 }
 
 .publication-doi {
@@ -856,6 +865,7 @@ button {
 .globe-orbit-two { transform: rotate(-48deg); opacity: 0.55; }
 
 .globe-label-layer {
+  display: contents;
   position: absolute;
   z-index: 6;
   inset: 0;
@@ -871,9 +881,16 @@ button {
   align-items: flex-start;
   gap: 4px;
   opacity: var(--marker-visibility);
-  transform: translate(-50%, -6px);
+  transform: translate(-50%, -6px) scale(var(--marker-visibility));
+  transform-origin: center bottom;
   transition: opacity 100ms linear;
   pointer-events: auto;
+}
+
+.globe-label-stack:has(.globe-place-button.is-active),
+.globe-label-stack:has(.globe-place-button:focus-visible),
+.globe-label-stack:has(.globe-place-button:hover) {
+  z-index: 2;
 }
 
 .globe-place-button,

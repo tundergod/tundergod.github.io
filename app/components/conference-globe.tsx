@@ -1,7 +1,8 @@
 "use client";
 
 import createGlobe, { type Marker } from "cobe";
-import { useEffect, useRef, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { createPortal } from "react-dom";
 
 import type { ConferenceEdition, Place, Publication } from "../data/portfolio";
 import {
@@ -35,6 +36,7 @@ export function ConferenceGlobe({
 }: ConferenceGlobeProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const frameRef = useRef<HTMLDivElement>(null);
+  const [labelHost, setLabelHost] = useState<HTMLElement | null>(null);
   const activePlaceRef = useRef(activePlace);
   const targetRef = useRef(
     activePlace
@@ -95,6 +97,7 @@ export function ConferenceGlobe({
       markers: buildMarkers(),
       arcs: [],
     });
+    setLabelHost(canvas.parentElement);
 
     const render = () => {
       const target = targetRef.current;
@@ -150,6 +153,51 @@ export function ConferenceGlobe({
     })
     .filter(({ editions }) => editions.length > 0);
 
+  const labelLayer = (
+    <div className="globe-label-layer">
+      {placesWithConferences.map(({ place, editionLabels, publications: placePublications }) => {
+        const anchorStyle = {
+          "--marker-visibility": `var(--cobe-visible-${place.id}, 0)`,
+          positionAnchor: `--cobe-${place.id}`,
+        } as CSSProperties & {
+          "--marker-visibility": string;
+          positionAnchor: string;
+        };
+        return (
+          <div
+            className="globe-label-stack"
+            key={place.id}
+            style={anchorStyle}
+          >
+            <button
+              className={
+                place.id === activePlaceId
+                  ? "globe-place-button is-active"
+                  : "globe-place-button"
+              }
+              type="button"
+              aria-pressed={place.id === activePlaceId}
+              onClick={() => onSelectPlace(place.id)}
+            >
+              <span className="globe-label-city">{place.city}</span>
+              <span className="globe-place-details">
+                <span className="globe-label-editions">
+                  {editionLabels.join(", ")}
+                </span>
+                <span className="globe-label-count">
+                  {placePublications.length} {placePublications.length === 1
+                    ? "publication"
+                    : "publications"}
+                </span>
+                <span className="globe-label-country">{place.country}</span>
+              </span>
+            </button>
+          </div>
+        );
+      })}
+    </div>
+  );
+
   return (
     <div className="globe-unit">
       <div className="globe-frame" ref={frameRef}>
@@ -157,48 +205,7 @@ export function ConferenceGlobe({
         <div className="globe-orbit globe-orbit-one" aria-hidden="true" />
         <div className="globe-orbit globe-orbit-two" aria-hidden="true" />
 
-        <div className="globe-label-layer">
-          {placesWithConferences.map(({ place, editionLabels, publications: placePublications }) => {
-            const anchorStyle = {
-              "--marker-visibility": `var(--cobe-visible-${place.id}, 0)`,
-              positionAnchor: `--cobe-${place.id}`,
-            } as CSSProperties & {
-              "--marker-visibility": string;
-              positionAnchor: string;
-            };
-            return (
-              <div
-                className="globe-label-stack"
-                key={place.id}
-                style={anchorStyle}
-              >
-                <button
-                  className={
-                    place.id === activePlaceId
-                      ? "globe-place-button is-active"
-                      : "globe-place-button"
-                  }
-                  type="button"
-                  aria-pressed={place.id === activePlaceId}
-                  onClick={() => onSelectPlace(place.id)}
-                >
-                  <span className="globe-label-city">{place.city}</span>
-                  <span className="globe-place-details">
-                    <span className="globe-label-editions">
-                      {editionLabels.join(", ")}
-                    </span>
-                    <span className="globe-label-count">
-                      {placePublications.length} {placePublications.length === 1
-                        ? "publication"
-                        : "publications"}
-                    </span>
-                    <span className="globe-label-country">{place.country}</span>
-                  </span>
-                </button>
-              </div>
-            );
-          })}
-        </div>
+        {labelHost ? createPortal(labelLayer, labelHost) : labelLayer}
 
         <div className="conference-index-fallback" aria-label="Conference places">
           {placesWithConferences.map(({ place, editionLabels, publications: placePublications }) => (
