@@ -38,10 +38,7 @@ test("preserves GraphISC and WinHD shared-edition semantics", () => {
   const winhd = data.publications.find(
     ({ id }) => id === "winhd-cases-2026",
   );
-  assert.deepEqual(graphisc?.venueTags, [
-    "TCAD",
-    "CASES / EMSOFT / CODES",
-  ]);
+  assert.deepEqual(graphisc?.venueTags, ["TCAD", "CASES"]);
   assert.equal(graphisc?.type, "journal");
   assert.equal(graphisc?.conferenceEditionId, "esweek-2026");
   assert.deepEqual(winhd?.venueTags, ["CASES"]);
