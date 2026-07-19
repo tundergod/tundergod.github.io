@@ -24,14 +24,22 @@ npm test
 
 ## Content structure
 
-- `app/data/portfolio.ts`: publications, conference editions, places, and research areas derived from the CV.
+- `content/*.json`: canonical website identity, publications, conference editions, locations, topics, links, and travel content.
+- `content/README.md`: editing workflow and copy-ready templates for every content file.
+- `app/data/portfolio-schema.ts`: strict content validation and shared data types.
 - `app/lib/conference-model.ts`: relationship lookups and globe-coordinate conversion.
 - `app/components/publication-observatory.tsx`: filters, publication selection, and conference context.
 - `app/components/conference-globe.tsx`: responsive COBE rendering and focus animation.
 - `app/globals.css`: the responsive dark visual system.
 
-The CV remains the canonical source. Update the structured portfolio data when the CV changes; do not add website code to the CV project.
+For routine updates, edit only the JSON content and run:
+
+```bash
+npm run content:validate
+```
+
+The website content and `../tundergod-cv/main.tex` are independent sources; neither automatically overwrites the other.
 
 ## Hosting
 
-The project is Sites-compatible through `.openai/hosting.json`, but a production site is not created or deployed automatically. Deployment should happen only after the local preview is approved.
+Pushes to `main` are built and deployed by GitHub Actions to [tundergod.github.io](https://tundergod.github.io/). Run `npm run test:pages` to verify the static GitHub Pages artifact locally.

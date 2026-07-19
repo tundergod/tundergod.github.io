@@ -237,6 +237,18 @@ test("lets globe callouts extend beyond the circular frame", async () => {
   assert.match(styles, /\.globe-frame\s*{[^}]*overflow:\s*visible;/s);
 });
 
+test("insets the mobile globe so anchored callouts do not widen the page", async () => {
+  const styles = await readFile(
+    new URL("../app/globals.css", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(
+    styles,
+    /@media \(max-width: 660px\)[\s\S]*\.globe-frame\s*{[^}]*width:\s*min\(calc\(100% - 32px\), 420px\);/s,
+  );
+});
+
 test("removes the disposable starter preview", async () => {
   await assert.rejects(access(new URL("../app/_sites-preview", templateRoot)));
 });

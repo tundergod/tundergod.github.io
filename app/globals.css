@@ -1414,7 +1414,7 @@ footer h2 {
   }
 
   .globe-frame {
-    width: min(100%, 420px);
+    width: min(calc(100% - 32px), 420px);
     margin: 0 auto;
   }
 
