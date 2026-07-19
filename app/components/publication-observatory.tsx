@@ -7,6 +7,7 @@ import {
   places,
   publications,
   researchAreaLabels,
+  type Place,
   type Publication,
   type ResearchArea,
 } from "../data/portfolio";
@@ -112,6 +113,57 @@ function PublicationRow({
         </span>
       </span>
     </article>
+  );
+}
+
+function PublicationFocusCard({
+  publication,
+  place,
+}: {
+  publication: Publication;
+  place?: Place;
+}) {
+  const venueTags = publication.venueTags ?? [publication.venue];
+
+  return (
+    <div className="journey-card publication-focus-card" aria-live="polite">
+      <p className="eyebrow">Publication focus</p>
+      <div className="publication-focus-heading">
+        {venueTags.map((venue) => (
+          <span className="venue-chip" key={venue}>{venue}</span>
+        ))}
+        <span className="publication-focus-year">{publication.year}</span>
+      </div>
+      <h3>{publication.title}</h3>
+      <p className="publication-focus-authors">
+        <AuthorLine authors={publication.authors} />
+      </p>
+      <div className="publication-focus-meta">
+        <div className="publication-focus-topics">
+          {publication.areas.map((area) => (
+            <span className="publication-topic-tag" key={area}>
+              {researchAreaLabels[area]}
+            </span>
+          ))}
+        </div>
+        {place ? (
+          <span className="publication-focus-location">
+            {place.city}, {place.country}
+          </span>
+        ) : null}
+        {publication.doi ? (
+          <a
+            className="publication-focus-doi"
+            href={`https://doi.org/${publication.doi}`}
+            target="_blank"
+            rel="noreferrer"
+            aria-label={`Open DOI for ${publication.title}`}
+          >
+            DOI <span aria-hidden="true">↗</span>
+          </a>
+        ) : null}
+      </div>
+    </div>
   );
 }
 
@@ -264,17 +316,11 @@ export function PublicationObservatory() {
             onSelectPlace={selectPlace}
           />
 
-          {!publicationEdition && selectedPublication ? (
-            <div className="journey-card" aria-live="polite">
-              <div className="journal-focus">
-                <p className="eyebrow">Publication focus</p>
-                <h3>
-                  {(selectedPublication.venueTags ?? [selectedPublication.venue]).join(" + ")} · {selectedPublication.year}
-                </h3>
-                <p>{selectedPublication.title}</p>
-                <span>This journal record has no conference location attached.</span>
-              </div>
-            </div>
+          {selectedPublication ? (
+            <PublicationFocusCard
+              publication={selectedPublication}
+              place={publicationPlace}
+            />
           ) : null}
 
           <div className="photo-empty">

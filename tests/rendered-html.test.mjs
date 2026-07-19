@@ -138,6 +138,22 @@ test("keeps enlarged bibliographic tags in the title text flow", async () => {
   );
 });
 
+test("renders one complete focus card for every selected publication", async () => {
+  const source = await readFile(
+    new URL("../app/components/publication-observatory.tsx", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(source, /function PublicationFocusCard/);
+  assert.match(source, /selectedPublication \? \(/);
+  assert.match(source, /publication-focus-authors/);
+  assert.match(source, /publication-focus-topics/);
+  assert.match(source, /publication-focus-location/);
+  assert.match(source, /publication-focus-doi/);
+  assert.doesNotMatch(source, /has no conference location attached/);
+  assert.doesNotMatch(source, /!publicationEdition && selectedPublication/);
+});
+
 test("removes the disposable starter preview", async () => {
   await assert.rejects(access(new URL("../app/_sites-preview", templateRoot)));
 });
