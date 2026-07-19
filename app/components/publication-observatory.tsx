@@ -155,10 +155,8 @@ export function PublicationObservatory() {
     setSelectedId(publication.id);
   }
 
-  function selectEdition(editionId: string) {
-    const edition = conferenceEditions.find((candidate) => candidate.id === editionId);
-    if (!edition) return;
-    setSelectedPlaceId(edition.placeId);
+  function selectPlace(placeId: string) {
+    setSelectedPlaceId(placeId);
     setSelectedId(null);
   }
 
@@ -259,10 +257,11 @@ export function PublicationObservatory() {
 
           <ConferenceGlobe
             activePlace={selectedPlace}
-            activeEditionId={publicationEdition?.id}
+            activePlaceId={selectedPlace?.id}
             conferenceEditions={conferenceEditions}
             places={places}
-            onSelectEdition={selectEdition}
+            publications={publications}
+            onSelectPlace={selectPlace}
           />
 
           {!publicationEdition && selectedPublication ? (

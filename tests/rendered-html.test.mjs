@@ -53,14 +53,17 @@ test("server-renders the academic profile and complete publication observatory",
   assert.match(html, /iCheck/);
   assert.match(html, /Conference signal/);
   assert.match(html, /Browse all conferences/);
-  assert.match(html, /globe-conference-button/);
+  assert.match(html, /globe-place-button/);
+  assert.match(html, /class="globe-label-city"[^>]*>Long Beach</);
+  assert.match(html, /class="globe-label-editions"[^>]*>DAC&#x27;26</);
+  assert.match(html, /class="globe-label-count"[^>]*>2<!-- --> <!-- -->publications</);
   assert.doesNotMatch(html, /class="globe-origin"/);
   const visibleText = html
     .replace(/<script[\s\S]*?<\/script>/g, "")
     .replace(/<!--[\s\S]*?-->/g, "")
     .replace(/<[^>]+>/g, " ")
     .replace(/\s+/g, " ");
-  assert.match(visibleText, /DAC 2026 Long Beach, USA/);
+  assert.match(visibleText, /Long Beach DAC&#x27;26 2 publications USA/);
   assert.match(html, /Travel field notes/);
   assert.doesNotMatch(html, />Accepted</);
   assert.doesNotMatch(html, /Map linked/);
@@ -73,7 +76,7 @@ test("server-renders the academic profile and complete publication observatory",
   assert.doesNotMatch(html, /Your site is taking shape|codex-preview|react-loading-skeleton/);
 });
 
-test("keeps conference controls inside a globe with no routes", async () => {
+test("keeps place controls inside a globe with no routes", async () => {
   const globeSource = await readFile(
     new URL("../app/components/conference-globe.tsx", import.meta.url),
     "utf8",
@@ -83,8 +86,8 @@ test("keeps conference controls inside a globe with no routes", async () => {
   const fallbackStart = globeSource.indexOf(
     '<div className="conference-index-fallback"',
   );
-  const detailStart = globeSource.indexOf(
-    'className="globe-conference-detail"',
+  const placeDetailsStart = globeSource.indexOf(
+    'className="globe-place-details"',
   );
   const observatorySource = await readFile(
     new URL("../app/components/publication-observatory.tsx", import.meta.url),
@@ -95,7 +98,7 @@ test("keeps conference controls inside a globe with no routes", async () => {
   assert.doesNotMatch(globeSource, /topicRouteArcs|buildArcs/);
   assert.ok(frameStart >= 0);
   assert.ok(fallbackStart > frameStart && fallbackStart < frameEnd);
-  assert.ok(detailStart > frameStart && detailStart < frameEnd);
+  assert.ok(placeDetailsStart > frameStart && placeDetailsStart < frameEnd);
   assert.doesNotMatch(observatorySource, /Focused location|related-block/);
 });
 

@@ -3,15 +3,19 @@
 import createGlobe, { type Marker } from "cobe";
 import { useEffect, useRef, type CSSProperties } from "react";
 
-import type { ConferenceEdition, Place } from "../data/portfolio";
-import { coordinatesToAngles } from "../lib/conference-model";
+import type { ConferenceEdition, Place, Publication } from "../data/portfolio";
+import {
+  coordinatesToAngles,
+  getPublicationsForPlace,
+} from "../lib/conference-model";
 
 type ConferenceGlobeProps = {
-  activeEditionId?: string;
   activePlace?: Place;
+  activePlaceId?: string;
   conferenceEditions: ConferenceEdition[];
-  onSelectEdition: (editionId: string) => void;
+  onSelectPlace: (placeId: string) => void;
   places: Place[];
+  publications: Publication[];
 };
 
 function easeAngle(current: number, target: number, amount: number) {
@@ -22,11 +26,12 @@ function easeAngle(current: number, target: number, amount: number) {
 }
 
 export function ConferenceGlobe({
-  activeEditionId,
   activePlace,
+  activePlaceId,
   conferenceEditions,
-  onSelectEdition,
+  onSelectPlace,
   places,
+  publications,
 }: ConferenceGlobeProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const frameRef = useRef<HTMLDivElement>(null);
@@ -124,17 +129,26 @@ export function ConferenceGlobe({
     };
   }, [places]);
 
-  const editionsByPlace = places
-    .map((place) => ({
-      place,
-      editions: conferenceEditions.filter(
+  const placesWithConferences = places
+    .map((place) => {
+      const editions = conferenceEditions.filter(
         (edition) => edition.placeId === place.id,
-      ),
-    }))
+      ).sort((a, b) => b.year - a.year);
+
+      return {
+        place,
+        editions,
+        editionLabels: [...new Set(editions.map(
+          (edition) => `${edition.series}'${String(edition.year).slice(-2)}`,
+        ))],
+        publications: getPublicationsForPlace(
+          place.id,
+          conferenceEditions,
+          publications,
+        ),
+      };
+    })
     .filter(({ editions }) => editions.length > 0);
-  const activeEdition = activeEditionId
-    ? conferenceEditions.find((edition) => edition.id === activeEditionId)
-    : undefined;
 
   return (
     <div className="globe-unit">
@@ -144,7 +158,7 @@ export function ConferenceGlobe({
         <div className="globe-orbit globe-orbit-two" aria-hidden="true" />
 
         <div className="globe-label-layer">
-          {editionsByPlace.map(({ place, editions }) => {
+          {placesWithConferences.map(({ place, editionLabels, publications: placePublications }) => {
             const anchorStyle = {
               "--marker-visibility": `var(--cobe-visible-${place.id}, 0)`,
               positionAnchor: `--cobe-${place.id}`,
@@ -152,75 +166,63 @@ export function ConferenceGlobe({
               "--marker-visibility": string;
               positionAnchor: string;
             };
-
             return (
               <div
                 className="globe-label-stack"
                 key={place.id}
                 style={anchorStyle}
               >
-                {editions.map((edition) => (
-                  <button
-                    className={
-                      edition.id === activeEditionId
-                        ? "globe-conference-button is-active"
-                        : "globe-conference-button"
-                    }
-                    type="button"
-                    key={edition.id}
-                    aria-pressed={edition.id === activeEditionId}
-                    onClick={() => onSelectEdition(edition.id)}
-                  >
-                    <span className="globe-label-conference">
-                      {edition.series} {edition.year}
+                <button
+                  className={
+                    place.id === activePlaceId
+                      ? "globe-place-button is-active"
+                      : "globe-place-button"
+                  }
+                  type="button"
+                  aria-pressed={place.id === activePlaceId}
+                  onClick={() => onSelectPlace(place.id)}
+                >
+                  <span className="globe-label-city">{place.city}</span>
+                  <span className="globe-place-details">
+                    <span className="globe-label-editions">
+                      {editionLabels.join(", ")}
                     </span>
-                    <span className="globe-label-place">
-                      {place.city}, {place.country}
+                    <span className="globe-label-count">
+                      {placePublications.length} {placePublications.length === 1
+                        ? "publication"
+                        : "publications"}
                     </span>
-                  </button>
-                ))}
+                    <span className="globe-label-country">{place.country}</span>
+                  </span>
+                </button>
               </div>
             );
           })}
         </div>
 
-        {activeEdition && activePlace && (
-          <div className="globe-conference-detail" aria-live="polite">
-            <span className="globe-detail-edition">
-              {activeEdition.series} {activeEdition.year}
-            </span>
-            <strong>
-              {activePlace.city}, {activePlace.country}
-            </strong>
-            <span className="globe-detail-name">{activeEdition.name}</span>
-            <span className="globe-detail-date">{activeEdition.dates}</span>
-          </div>
-        )}
-
-        <div className="conference-index-fallback" aria-label="Conferences">
-          {conferenceEditions.map((edition) => {
-            const place = places.find(
-              (candidate) => candidate.id === edition.placeId,
-            );
-            if (!place) return null;
-
-            return (
-              <button
-                className={edition.id === activeEditionId ? "is-active" : undefined}
-                type="button"
-                key={edition.id}
-                aria-pressed={edition.id === activeEditionId}
-                onClick={() => onSelectEdition(edition.id)}
-              >
-                <span className="globe-label-conference">
-                  {edition.series} {edition.year}
+        <div className="conference-index-fallback" aria-label="Conference places">
+          {placesWithConferences.map(({ place, editionLabels, publications: placePublications }) => (
+            <button
+              className={place.id === activePlaceId ? "is-active" : undefined}
+              type="button"
+              key={place.id}
+              aria-pressed={place.id === activePlaceId}
+              onClick={() => onSelectPlace(place.id)}
+            >
+              <span className="globe-label-city">{place.city}</span>
+              <span className="globe-place-details">
+                <span className="globe-label-editions">
+                  {editionLabels.join(", ")}
                 </span>
-                <span className="globe-label-place">
-                  {place.city}, {place.country}
+                <span className="globe-label-count">
+                  {placePublications.length} {placePublications.length === 1
+                    ? "publication"
+                    : "publications"}
                 </span>
-              </button>
-            );
-          })}
+                <span className="globe-label-country">{place.country}</span>
+              </span>
+            </button>
+          ))}
         </div>
       </div>
     </div>
