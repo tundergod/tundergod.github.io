@@ -12,7 +12,7 @@
     "build:pages": "npm run content:validate && GITHUB_PAGES=true next build",
     "start": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext start",
     "test": "npm run test:model && npm run build && node --test tests/rendered-html.test.mjs",
-    "test:model": "node --experimental-strip-types --test tests/conference-model.test.mjs tests/content-migration.test.mjs tests/content-validation.test.mjs tests/globe-label-collisions.test.mjs",
+    "test:model": "node --experimental-strip-types --test tests/conference-model.test.mjs tests/content-boundary.test.mjs tests/content-migration.test.mjs tests/content-validation.test.mjs tests/globe-label-collisions.test.mjs",
     "test:pages": "npm run build:pages && npm run verify:pages",
     "verify:pages": "node --test tests/pages-export.test.mjs tests/pages-workflow.test.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { portfolioData } from "./data/portfolio-content";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -13,9 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Wen Sheng Lim — Computer Systems Research",
-  description:
-    "Research, publications, and conference journeys by Wen Sheng Lim, a computer systems researcher in Taipei.",
+  title: portfolioData.bio.seoTitle,
+  description: portfolioData.bio.seoDescription,
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
