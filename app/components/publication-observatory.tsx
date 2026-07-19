@@ -2,15 +2,11 @@
 
 import { useMemo, useState } from "react";
 
-import {
-  conferenceEditions,
-  places,
-  publications,
-  researchAreaLabels,
-  type Place,
-  type Publication,
-  type ResearchArea,
-} from "../data/portfolio";
+import type {
+  Location,
+  PortfolioData,
+  Publication,
+} from "../data/portfolio-schema";
 import {
   filterPublications,
   getEditionIdsForPlace,
@@ -19,17 +15,6 @@ import {
   type PublicationTypeFilter,
 } from "../lib/conference-model";
 import { ConferenceGlobe } from "./conference-globe";
-
-const topicFilters: Array<{
-  value: "All" | ResearchArea;
-  label: string;
-}> = [
-  { value: "All", label: "All" },
-  { value: "Storage", label: researchAreaLabels.Storage },
-  { value: "Architecture", label: researchAreaLabels.Architecture },
-  { value: "Intermittent", label: researchAreaLabels.Intermittent },
-  { value: "Robotics", label: researchAreaLabels.Robotics },
-];
 
 const publicationTypeFilters: Array<{
   value: PublicationTypeFilter;
@@ -40,14 +25,21 @@ const publicationTypeFilters: Array<{
   { value: "conference", label: "Conference" },
 ];
 
-function AuthorLine({ authors }: { authors: string }) {
-  const pieces = authors.split("Wen Sheng Lim");
+function AuthorLine({
+  authors,
+  highlightedAuthor,
+}: {
+  authors: string[];
+  highlightedAuthor: string;
+}) {
   return (
     <span>
-      {pieces.map((piece, index) => (
-        <span key={`${piece}-${index}`}>
-          {index > 0 && <strong>Wen Sheng Lim</strong>}
-          {piece}
+      {authors.map((author, index) => (
+        <span key={author}>
+          {index > 0 && (index === authors.length - 1
+            ? authors.length === 2 ? " and " : ", and "
+            : ", ")}
+          {author === highlightedAuthor ? <strong>{author}</strong> : author}
         </span>
       ))}
     </span>
@@ -58,10 +50,14 @@ function PublicationRow({
   publication,
   selected,
   onSelect,
+  topicLabels,
+  highlightedAuthor,
 }: {
   publication: Publication;
   selected: boolean;
   onSelect: (publication: Publication) => void;
+  topicLabels: Map<string, string>;
+  highlightedAuthor: string;
 }) {
   return (
     <article
@@ -80,15 +76,15 @@ function PublicationRow({
       <span className="publication-copy">
         <span className="publication-title-line">
           <span className="publication-title">{publication.title}</span>
-          {(publication.venueTags ?? [publication.venue]).map((venue) => (
+          {publication.venueTags.map((venue) => (
             <span className="venue-chip" key={venue}>{venue}</span>
           ))}
           <span className="publication-type-tag">
             {publication.type === "journal" ? "Journal" : "Conference"}
           </span>
-          {publication.areas.map((area) => (
-            <span className="publication-topic-tag" key={area}>
-              {researchAreaLabels[area]}
+          {publication.topics.map((topic) => (
+            <span className="publication-topic-tag" key={topic}>
+              {topicLabels.get(topic) ?? topic}
             </span>
           ))}
           {publication.doi && (
@@ -106,7 +102,10 @@ function PublicationRow({
         </span>
         <span className="publication-secondary-line">
           <span className="publication-authors">
-            <AuthorLine authors={publication.authors} />
+            <AuthorLine
+              authors={publication.authors}
+              highlightedAuthor={highlightedAuthor}
+            />
           </span>
         </span>
       </span>
@@ -117,11 +116,15 @@ function PublicationRow({
 function PublicationFocusCard({
   publication,
   place,
+  topicLabels,
+  highlightedAuthor,
 }: {
   publication: Publication;
-  place?: Place;
+  place?: Location;
+  topicLabels: Map<string, string>;
+  highlightedAuthor: string;
 }) {
-  const venueTags = publication.venueTags ?? [publication.venue];
+  const venueTags = publication.venueTags;
 
   return (
     <div className="journey-card publication-focus-card" aria-live="polite">
@@ -134,13 +137,16 @@ function PublicationFocusCard({
       </div>
       <h3>{publication.title}</h3>
       <p className="publication-focus-authors">
-        <AuthorLine authors={publication.authors} />
+        <AuthorLine
+          authors={publication.authors}
+          highlightedAuthor={highlightedAuthor}
+        />
       </p>
       <div className="publication-focus-meta">
         <div className="publication-focus-topics">
-          {publication.areas.map((area) => (
-            <span className="publication-topic-tag" key={area}>
-              {researchAreaLabels[area]}
+          {publication.topics.map((topic) => (
+            <span className="publication-topic-tag" key={topic}>
+              {topicLabels.get(topic) ?? topic}
             </span>
           ))}
         </div>
@@ -165,8 +171,16 @@ function PublicationFocusCard({
   );
 }
 
-export function PublicationObservatory() {
-  const [activeFilter, setActiveFilter] = useState<"All" | ResearchArea>("All");
+export function PublicationObservatory({ data }: { data: PortfolioData }) {
+  const topicFilters = [
+    { value: "All", label: "All" },
+    ...data.researchTopics.map(({ id, label }) => ({ value: id, label })),
+  ];
+  const topicLabels = useMemo(
+    () => new Map(data.researchTopics.map(({ id, label }) => [id, label])),
+    [data.researchTopics],
+  );
+  const [activeFilter, setActiveFilter] = useState<string>("All");
   const [publicationType, setPublicationType] =
     useState<PublicationTypeFilter>("All");
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null);
@@ -174,30 +188,30 @@ export function PublicationObservatory() {
 
   const selectedPlaceEditionIds = useMemo(
     () => selectedPlaceId
-      ? getEditionIdsForPlace(selectedPlaceId, conferenceEditions)
+      ? getEditionIdsForPlace(selectedPlaceId, data.conferences)
       : undefined,
-    [selectedPlaceId],
+    [data.conferences, selectedPlaceId],
   );
 
   const visiblePublications = useMemo(
     () =>
-      filterPublications(publications, {
-        area: activeFilter,
+      filterPublications(data.publications, {
+        topic: activeFilter,
         editionIds: selectedPlaceEditionIds,
         type: publicationType,
       }),
-    [activeFilter, publicationType, selectedPlaceEditionIds],
+    [activeFilter, data.publications, publicationType, selectedPlaceEditionIds],
   );
   const years = [...new Set(visiblePublications.map((publication) => publication.year))];
   const selectedPublication = selectedId
-    ? publications.find((publication) => publication.id === selectedId)
+    ? data.publications.find((publication) => publication.id === selectedId)
     : undefined;
   const publicationEdition = selectedPublication
-    ? getEditionForPublication(selectedPublication, conferenceEditions)
+    ? getEditionForPublication(selectedPublication, data.conferences)
     : undefined;
-  const publicationPlace = getPlaceForEdition(publicationEdition, places);
+  const publicationPlace = getPlaceForEdition(publicationEdition, data.locations);
   const selectedPlace = selectedPlaceId
-    ? places.find((place) => place.id === selectedPlaceId)
+    ? data.locations.find((place) => place.id === selectedPlaceId)
     : publicationPlace;
 
   function selectPublication(publication: Publication) {
@@ -279,6 +293,8 @@ export function PublicationObservatory() {
                       publication={publication}
                       selected={publication.id === selectedId}
                       onSelect={selectPublication}
+                      topicLabels={topicLabels}
+                      highlightedAuthor={data.bio.name}
                     />
                   ))}
               </div>
@@ -308,9 +324,9 @@ export function PublicationObservatory() {
           <ConferenceGlobe
             activePlace={selectedPlace}
             activePlaceId={selectedPlace?.id}
-            conferenceEditions={conferenceEditions}
-            places={places}
-            publications={publications}
+            conferenceEditions={data.conferences}
+            places={data.locations}
+            publications={data.publications}
             onSelectPlace={selectPlace}
           />
 
@@ -318,14 +334,16 @@ export function PublicationObservatory() {
             <PublicationFocusCard
               publication={selectedPublication}
               place={publicationPlace}
+              topicLabels={topicLabels}
+              highlightedAuthor={data.bio.name}
             />
           ) : null}
 
           <div className="photo-empty">
             <span className="photo-mark" aria-hidden="true">＋</span>
             <span>
-              <strong>Travel field notes</strong>
-              Photos from each conference journey can be added here later.
+              <strong>{data.travel.placeholder.title}</strong>
+              {data.travel.placeholder.body}
             </span>
           </div>
         </div>

@@ -1,4 +1,5 @@
 import { PublicationObservatory } from "./components/publication-observatory";
+import { portfolioData } from "./data/portfolio-content";
 
 function ArrowIcon() {
   return <span aria-hidden="true">↗</span>;
@@ -39,7 +40,7 @@ export default function Home() {
       </section>
 
       <section className="publications-section" id="publications">
-        <PublicationObservatory />
+        <PublicationObservatory data={portfolioData} />
       </section>
 
       <footer className="compact-footer">

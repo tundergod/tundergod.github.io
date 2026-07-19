@@ -139,10 +139,22 @@ test("keeps publication metadata in the approved title flow", async () => {
 
   assert.ok(titleLineStart >= 0);
   assert.ok(secondaryLineStart > titleLineStart);
-  assert.ok(titleLine.indexOf("publication-type-tag") < titleLine.indexOf("publication.areas"));
-  assert.ok(titleLine.indexOf("publication.areas") < titleLine.indexOf("publication-doi"));
+  assert.ok(titleLine.indexOf("publication-type-tag") < titleLine.indexOf("publication.topics"));
+  assert.ok(titleLine.indexOf("publication.topics") < titleLine.indexOf("publication-doi"));
   assert.match(titleLine, /publication-topic-tag/);
   assert.doesNotMatch(secondaryLine, /publication-topic-tags|publication-topic-tag/);
+});
+
+test("drives publication behavior from validated portfolio content", async () => {
+  const source = await readFile(
+    new URL("../app/components/publication-observatory.tsx", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(source, /function PublicationObservatory\(\{ data \}/);
+  assert.match(source, /data\.researchTopics\.map/);
+  assert.match(source, /highlightedAuthor=\{data\.bio\.name\}/);
+  assert.doesNotMatch(source, /Wen Sheng Lim|^const topicFilters\s*=/m);
 });
 
 test("enforces the approved readable typography scale", async () => {

@@ -11,7 +11,11 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 
-import type { ConferenceEdition, Place, Publication } from "../data/portfolio";
+import type {
+  ConferenceEdition,
+  Location,
+  Publication,
+} from "../data/portfolio-schema";
 import {
   coordinatesToAngles,
   getPublicationsForPlace,
@@ -24,11 +28,11 @@ import {
 } from "../lib/globe-label-collisions";
 
 type ConferenceGlobeProps = {
-  activePlace?: Place;
+  activePlace?: Location;
   activePlaceId?: string;
   conferenceEditions: ConferenceEdition[];
   onSelectPlace: (placeId: string) => void;
-  places: Place[];
+  places: Location[];
   publications: Publication[];
 };
 

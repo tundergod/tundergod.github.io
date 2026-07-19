@@ -1,16 +1,15 @@
 import type {
   ConferenceEdition,
-  Place,
+  Location,
   Publication,
-  ResearchArea,
-} from "../data/portfolio.ts";
+} from "../data/portfolio-schema.ts";
 
 export type PublicationTypeFilter = "All" | Publication["type"];
 
 export function filterPublications(
   allPublications: Publication[],
   filters: {
-    area: "All" | ResearchArea;
+    topic: "All" | string;
     editionId?: string;
     editionIds?: string[];
     type: PublicationTypeFilter;
@@ -18,7 +17,7 @@ export function filterPublications(
 ) {
   return allPublications.filter(
     (publication) =>
-      (filters.area === "All" || publication.areas.includes(filters.area)) &&
+      (filters.topic === "All" || publication.topics.includes(filters.topic)) &&
       (!filters.editionId ||
         publication.conferenceEditionId === filters.editionId) &&
       (!filters.editionIds ||
@@ -38,7 +37,7 @@ export function getEditionForPublication(
 
 export function getPlaceForEdition(
   edition: ConferenceEdition | undefined,
-  allPlaces: Place[],
+  allPlaces: Location[],
 ) {
   if (!edition) return undefined;
   return allPlaces.find((place) => place.id === edition.placeId);

@@ -2,12 +2,6 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
-  conferenceEditions,
-  places,
-  publications,
-  researchAreaLabels,
-} from "../app/data/portfolio.ts";
-import {
   filterPublications,
   getEditionIdsForPlace,
   getEditionForPublication,
@@ -16,10 +10,18 @@ import {
   getPublicationsForEdition,
   getPublicationsForPlace,
 } from "../app/lib/conference-model.ts";
+import { loadContent } from "../scripts/load-content.ts";
+
+const {
+  conferences: conferenceEditions,
+  locations: places,
+  publications,
+  researchTopics,
+} = await loadContent();
 
 test("topic, conference edition, and publication type filters intersect", () => {
   const filtered = filterPublications(publications, {
-    area: "Storage",
+    topic: "memory-storage",
     editionId: "dac-2026",
     type: "conference",
   });
@@ -30,7 +32,7 @@ test("topic, conference edition, and publication type filters intersect", () => 
   );
   assert.deepEqual(
     filterPublications(publications, {
-      area: "Storage",
+      topic: "memory-storage",
       editionId: "dac-2026",
       type: "journal",
     }),
@@ -62,8 +64,7 @@ test("the shared embedded-systems edition groups distinct papers", () => {
     ["graphisc-tcad-2026", "winhd-cases-2026"],
   );
   const winhd = papers.find((paper) => paper.id === "winhd-cases-2026");
-  assert.equal(winhd?.venue, "CASES");
-  assert.equal(winhd?.venueTags, undefined);
+  assert.deepEqual(winhd?.venueTags, ["CASES"]);
   assert.equal(
     winhd?.type,
     "conference",
@@ -123,7 +124,7 @@ test("place filters include every edition at one location", () => {
   const editionIds = getEditionIdsForPlace("shared-place", sampleEditions);
 
   const result = filterPublications(samplePublications, {
-    area: "All",
+    topic: "All",
     editionIds,
     type: "All",
   });
@@ -156,13 +157,16 @@ test("place publication counts deduplicate publication IDs", () => {
   assert.deepEqual(result.map((paper) => paper.id), ["paper-2026", "paper-2025"]);
 });
 
-test("research areas expose reader-facing labels", () => {
-  assert.deepEqual(researchAreaLabels, {
-    Storage: "Memory / Storage",
-    Architecture: "Architecture",
-    Intermittent: "Embedded",
-    Robotics: "Robotics",
-  });
+test("research topics expose reader-facing labels", () => {
+  assert.deepEqual(
+    Object.fromEntries(researchTopics.map(({ id, label }) => [id, label])),
+    {
+      "memory-storage": "Memory / Storage",
+      architecture: "Architecture",
+      embedded: "Embedded",
+      robotics: "Robotics",
+    },
+  );
 });
 
 test("journal publications do not invent a conference location", () => {
