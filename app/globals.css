@@ -5,7 +5,7 @@
   --carbon: #11161d;
   --carbon-soft: #151b23;
   --steel: #2a3642;
-  --steel-light: #617181;
+  --steel-light: #7f8fa1;
   --ice: #e8eef6;
   --muted: #99a6b3;
   --signal: #7cc7ff;
@@ -141,7 +141,7 @@ button {
 .eyebrow {
   margin: 0;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 11px;
 }
 
 .pulse-dot {
@@ -185,7 +185,7 @@ button {
 .filter-group-label {
   color: var(--steel-light);
   font-family: var(--font-geist-mono), monospace;
-  font-size: 12px;
+  font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -197,13 +197,13 @@ button {
 }
 
 .filter-chip {
-  padding: 9px 13px;
+  padding: 8px 12px;
   border: 1px solid var(--line);
   border-radius: 999px;
   color: var(--muted);
   background: transparent;
   font-family: var(--font-geist-mono), monospace;
-  font-size: 14px;
+  font-size: 12px;
   letter-spacing: 0.06em;
   cursor: pointer;
   transition: border-color 160ms ease, color 160ms ease, background 160ms ease;
@@ -331,7 +331,7 @@ button {
 }
 
 .publication-title {
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 500;
   line-height: 1.38;
   letter-spacing: -0.018em;
@@ -366,7 +366,7 @@ button {
   border: 1px solid var(--steel);
   color: var(--muted);
   font-family: var(--font-geist-mono), monospace;
-  font-size: 14px;
+  font-size: 11px;
   line-height: 1;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -376,9 +376,9 @@ button {
 .venue-chip,
 .publication-type-tag,
 .publication-doi {
-  min-height: 28px;
+  min-height: 22px;
   margin-left: 7px;
-  padding: 5px 8px;
+  padding: 4px 7px;
   vertical-align: 2px;
 }
 
@@ -387,12 +387,12 @@ button {
 }
 
 .publication-topic-tag {
-  min-height: 28px;
+  min-height: 22px;
   margin-left: 7px;
-  padding: 5px 8px;
+  padding: 4px 7px;
   border-color: rgba(124, 199, 255, 0.24);
   color: var(--signal);
-  font-size: 14px;
+  font-size: 11px;
   vertical-align: 2px;
 }
 
@@ -561,7 +561,7 @@ button {
   background: rgba(7, 9, 12, 0.86);
   box-shadow: 0 5px 18px rgba(0, 0, 0, 0.28);
   font-family: var(--font-geist-mono), monospace;
-  font-size: 9px;
+  font-size: 10px;
   line-height: 1.35;
   letter-spacing: 0.07em;
   text-align: left;
@@ -761,7 +761,7 @@ button {
 .publication-focus-location,
 .publication-focus-doi {
   font-family: var(--font-geist-mono), monospace;
-  font-size: 9px;
+  font-size: 11px;
 }
 
 .publication-focus-card h3 {
@@ -775,7 +775,7 @@ button {
 .publication-focus-authors {
   margin: 0;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.6;
 }
 
@@ -815,7 +815,7 @@ button {
   padding: 14px;
   border: 1px dashed var(--steel);
   color: var(--steel-light);
-  font-size: 9px;
+  font-size: 11px;
   line-height: 1.5;
 }
 
@@ -1017,7 +1017,7 @@ button {
 .compact-footer > span {
   color: var(--steel-light);
   font-family: var(--font-geist-mono), monospace;
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }

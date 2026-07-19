@@ -166,16 +166,16 @@ test("enforces the approved readable typography scale", async () => {
   assert.match(styles, /\.publication-title-line\s*{[^}]*display:\s*block;/s);
   assert.match(
     styles,
-    /\.publication-title\s*{[^}]*font-size:\s*18px;/s,
+    /\.publication-title\s*{[^}]*font-size:\s*17px;/s,
   );
   assert.match(
     styles,
-    /\.venue-chip,[\s\S]*\.publication-doi\s*{[^}]*font-size:\s*14px;/s,
+    /\.venue-chip,[\s\S]*\.publication-doi\s*{[^}]*font-size:\s*11px;/s,
   );
-  assert.match(styles, /\.publication-topic-tag\s*{[^}]*font-size:\s*14px;/s);
+  assert.match(styles, /\.publication-topic-tag\s*{[^}]*font-size:\s*11px;/s);
   assert.match(styles, /\.publication-authors\s*{[^}]*font-size:\s*13px;/s);
-  assert.match(styles, /\.filter-chip\s*{[^}]*font-size:\s*14px;/s);
-  assert.match(styles, /\.filter-group-label\s*{[^}]*font-size:\s*12px;/s);
+  assert.match(styles, /\.filter-chip\s*{[^}]*font-size:\s*12px;/s);
+  assert.match(styles, /\.filter-group-label\s*{[^}]*font-size:\s*11px;/s);
   assert.match(styles, /\.year-rail h3\s*{[^}]*font-size:\s*14px;/s);
   assert.match(styles, /\.year-rail span\s*{[^}]*font-size:\s*12px;/s);
   assert.match(styles, /\.panel-kicker\s*{[^}]*font-size:\s*12px;/s);
