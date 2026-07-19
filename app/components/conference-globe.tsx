@@ -1,7 +1,8 @@
 "use client";
 
-import createGlobe, { type Marker } from "cobe";
+import createGlobe, { type Arc, type Marker } from "cobe";
 import {
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -18,7 +19,11 @@ import type {
 } from "../data/portfolio-schema";
 import {
   coordinatesToAngles,
+  getJourneyStops,
+  getNextUpcomingStop,
   getPublicationsForPlace,
+  interpolateCoordinates,
+  type JourneyStop,
 } from "../lib/conference-model";
 import {
   groupOverlappingLabels,
@@ -41,6 +46,36 @@ function easeAngle(current: number, target: number, amount: number) {
   while (difference > Math.PI) difference -= Math.PI * 2;
   while (difference < -Math.PI) difference += Math.PI * 2;
   return current + difference * amount;
+}
+
+const LEG_DURATION_MS = 950;
+const SIGNAL_RGB: [number, number, number] = [0.49, 0.78, 1];
+const JOURNEY_RGB: [number, number, number] = [1, 0.54, 0.45];
+
+type PlaybackState = {
+  legIndex: number;
+  legStartedAt: number;
+  from: { phi: number; theta: number };
+  trailArcs: Arc[];
+};
+
+function dimColor(color: [number, number, number]): [number, number, number] {
+  return [color[0] * 0.45, color[1] * 0.45, color[2] * 0.45];
+}
+
+function legColor(stop: JourneyStop) {
+  return stop.status === "upcoming" ? JOURNEY_RGB : SIGNAL_RGB;
+}
+
+function easeInOutCubic(t: number) {
+  return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
+}
+
+function interpolateAngle(from: number, to: number, t: number) {
+  let difference = to - from;
+  while (difference > Math.PI) difference -= Math.PI * 2;
+  while (difference < -Math.PI) difference += Math.PI * 2;
+  return from + difference * t;
 }
 
 function getAnchorStyle(placeId: string) {
@@ -108,6 +143,36 @@ export function ConferenceGlobe({
       ? coordinatesToAngles(activePlace.latitude, activePlace.longitude)
       : { phi: 0.45, theta: 0.22 },
   );
+  const playbackRef = useRef<PlaybackState | null>(null);
+  const arcsRef = useRef<Arc[]>([]);
+  const journeyStopsRef = useRef<JourneyStop[]>([]);
+  const cameraRef = useRef(
+    activePlace
+      ? coordinatesToAngles(activePlace.latitude, activePlace.longitude)
+      : { phi: 0.45, theta: 0.22 },
+  );
+  const [isPlaying, setIsPlaying] = useState(false);
+  // playbackLeg is consumed by the Task 3 timeline nodes rendered inside
+  // .journey-strip; this component only needs to keep it up to date.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [playbackLeg, setPlaybackLeg] = useState(-1);
+
+  const handleFinishRef = useRef(() => {});
+  useEffect(() => {
+    handleFinishRef.current = () => {
+      const stops = journeyStopsRef.current;
+      arcsRef.current = stops.slice(1).map((stop, index) => ({
+        from: [stops[index].place.latitude, stops[index].place.longitude] as [number, number],
+        to: [stop.place.latitude, stop.place.longitude] as [number, number],
+        color: dimColor(legColor(stop)),
+      }));
+      playbackRef.current = null;
+      setIsPlaying(false);
+      setPlaybackLeg(-1);
+      const landing = getNextUpcomingStop(stops) ?? stops[stops.length - 1];
+      if (landing) onSelectPlace(landing.place.id);
+    };
+  });
 
   useEffect(() => {
     labelGroupsRef.current = labelGroups;
@@ -136,16 +201,14 @@ export function ConferenceGlobe({
     let theta = targetRef.current.theta;
     let animationFrame = 0;
     let collisionFrame = 0;
+    cameraRef.current = { phi, theta };
 
-    const buildMarkers = (): Marker[] =>
+    const buildMarkers = (highlightedPlaceId?: string): Marker[] =>
       placesWithConferences.map(({ place }) => ({
         id: place.id,
         location: [place.latitude, place.longitude] as [number, number],
-        size: activePlaceRef.current?.id === place.id ? 0.085 : 0.045,
-        color:
-          activePlaceRef.current?.id === place.id
-            ? ([1, 0.54, 0.45] as [number, number, number])
-            : ([0.49, 0.78, 1] as [number, number, number]),
+        size: highlightedPlaceId === place.id ? 0.085 : 0.045,
+        color: highlightedPlaceId === place.id ? JOURNEY_RGB : SIGNAL_RGB,
       }));
 
     const globe = createGlobe(canvas, {
@@ -164,8 +227,8 @@ export function ConferenceGlobe({
       markerElevation: 0.025,
       opacity: 0.93,
       scale: 0.93,
-      markers: buildMarkers(),
-      arcs: [],
+      markers: buildMarkers(activePlaceRef.current?.id),
+      arcs: arcsRef.current,
     });
     setLabelHost(canvas.parentElement);
 
@@ -213,21 +276,71 @@ export function ConferenceGlobe({
     };
 
     const render = () => {
-      const target = targetRef.current;
-      if (activePlaceRef.current) {
+      const playback = playbackRef.current;
+      let highlightedPlaceId = activePlaceRef.current?.id;
+      if (playback) {
+        const stops = journeyStopsRef.current;
+        const stop = stops[playback.legIndex];
+        const progress = Math.min(
+          1,
+          (performance.now() - playback.legStartedAt) / LEG_DURATION_MS,
+        );
+        const eased = easeInOutCubic(progress);
+        const target = coordinatesToAngles(stop.place.latitude, stop.place.longitude);
+        phi = interpolateAngle(playback.from.phi, target.phi, eased);
+        theta = playback.from.theta + (target.theta - playback.from.theta) * eased;
+        highlightedPlaceId = stop.place.id;
+        const previous = stops[playback.legIndex - 1];
+        if (previous) {
+          arcsRef.current = [
+            ...playback.trailArcs,
+            {
+              from: [previous.place.latitude, previous.place.longitude] as [number, number],
+              to: interpolateCoordinates(
+                [previous.place.latitude, previous.place.longitude],
+                [stop.place.latitude, stop.place.longitude],
+                eased,
+              ),
+              color: legColor(stop),
+            },
+          ];
+        }
+        if (progress >= 1) {
+          if (previous) {
+            playback.trailArcs = [
+              ...playback.trailArcs,
+              {
+                from: [previous.place.latitude, previous.place.longitude] as [number, number],
+                to: [stop.place.latitude, stop.place.longitude] as [number, number],
+                color: legColor(stop),
+              },
+            ];
+          }
+          if (playback.legIndex >= stops.length - 1) {
+            handleFinishRef.current();
+          } else {
+            playback.legIndex += 1;
+            playback.legStartedAt = performance.now();
+            playback.from = { phi, theta };
+            setPlaybackLeg(playback.legIndex);
+          }
+        }
+      } else if (activePlaceRef.current) {
+        const target = targetRef.current;
         phi = easeAngle(phi, target.phi, reducedMotion ? 1 : 0.045);
         theta += (target.theta - theta) * (reducedMotion ? 1 : 0.045);
       } else if (!reducedMotion && !interactionPausedRef.current) {
         phi += 0.0022;
       }
+      cameraRef.current = { phi, theta };
 
       globe.update({
         width: size * 2,
         height: size * 2,
         phi,
         theta,
-        markers: buildMarkers(),
-        arcs: [],
+        markers: buildMarkers(highlightedPlaceId),
+        arcs: arcsRef.current,
       });
       if (collisionFrame % 8 === 0) updateLabelGroups();
       collisionFrame += 1;
@@ -246,6 +359,42 @@ export function ConferenceGlobe({
       globe.destroy();
     };
   }, [placesWithConferences]);
+
+  const stopJourney = useCallback(() => {
+    const playback = playbackRef.current;
+    if (!playback) return;
+    arcsRef.current = playback.trailArcs;
+    playbackRef.current = null;
+    setIsPlaying(false);
+    setPlaybackLeg(-1);
+  }, []);
+
+  const startJourney = useCallback(() => {
+    if (playbackRef.current) {
+      stopJourney();
+      return;
+    }
+    const stops = getJourneyStops(conferenceEditions, places, new Date());
+    if (stops.length === 0) return;
+    journeyStopsRef.current = stops;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      handleFinishRef.current();
+      return;
+    }
+    playbackRef.current = {
+      legIndex: 0,
+      legStartedAt: performance.now(),
+      from: { ...cameraRef.current },
+      trailArcs: [],
+    };
+    setIsPlaying(true);
+    setPlaybackLeg(0);
+  }, [conferenceEditions, places, stopJourney]);
+
+  const handleSelectPlace = useCallback((placeId: string) => {
+    stopJourney();
+    onSelectPlace(placeId);
+  }, [onSelectPlace, stopJourney]);
 
   function pauseGlobeInteraction() {
     interactionPausedRef.current = true;
@@ -284,7 +433,7 @@ export function ConferenceGlobe({
           }
           type="button"
           aria-pressed={place.id === activePlaceId}
-          onClick={() => onSelectPlace(place.id)}
+          onClick={() => handleSelectPlace(place.id)}
         >
           <span className="globe-label-city">{place.city}</span>
           <span className="globe-place-details">
@@ -350,7 +499,7 @@ export function ConferenceGlobe({
                       key={placeId}
                       onClick={() => {
                         setExpandedGroupId(null);
-                        onSelectPlace(details.place.id);
+                        handleSelectPlace(details.place.id);
                       }}
                     >
                       <span>{details.place.city}</span>
@@ -393,7 +542,7 @@ export function ConferenceGlobe({
               type="button"
               key={place.id}
               aria-pressed={place.id === activePlaceId}
-              onClick={() => onSelectPlace(place.id)}
+              onClick={() => handleSelectPlace(place.id)}
             >
               <span className="globe-label-city">{place.city}</span>
               <span className="globe-place-details">
@@ -410,6 +559,12 @@ export function ConferenceGlobe({
             </button>
           ))}
         </div>
+      </div>
+
+      <div className="journey-strip">
+        <button className="journey-play" type="button" onClick={startJourney}>
+          {isPlaying ? "Stop journey" : "Play journey"}
+        </button>
       </div>
     </div>
   );

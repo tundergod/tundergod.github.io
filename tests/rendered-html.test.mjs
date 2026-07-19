@@ -76,7 +76,7 @@ test("server-renders the academic profile and complete publication observatory",
   assert.doesNotMatch(html, /Your site is taking shape|codex-preview|react-loading-skeleton/);
 });
 
-test("keeps place controls inside a globe with no routes", async () => {
+test("keeps place controls inside a globe with journey-only arcs", async () => {
   const globeSource = await readFile(
     new URL("../app/components/conference-globe.tsx", import.meta.url),
     "utf8",
@@ -95,7 +95,7 @@ test("keeps place controls inside a globe with no routes", async () => {
     "utf8",
   );
 
-  assert.match(globeSource, /arcs:\s*\[\]/);
+  assert.match(globeSource, /arcs:\s*arcsRef\.current/);
   assert.doesNotMatch(globeSource, /topicRouteArcs|buildArcs/);
   assert.ok(frameStart >= 0);
   assert.ok(fallbackStart > frameStart && fallbackStart < frameEnd);
@@ -225,7 +225,7 @@ test("renders expandable collision groups from COBE marker anchors", async () =>
   assert.match(source, /onPointerEnter/);
   assert.match(source, /onFocus/);
   assert.match(source, /onClick=\{\(\) => setExpandedGroupId\(groupKey\)\}/);
-  assert.match(source, /onSelectPlace\(details\.place\.id\)/);
+  assert.match(source, /handleSelectPlace\(details\.place\.id\)/);
 });
 
 test("lets globe callouts extend beyond the circular frame", async () => {
