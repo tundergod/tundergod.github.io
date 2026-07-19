@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { portfolioData } from "./data/portfolio-content";
+import { CANONICAL_URL } from "./lib/site";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -14,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://tundergod.github.io"),
+  metadataBase: new URL(CANONICAL_URL),
   title: portfolioData.bio.seoTitle,
   description: portfolioData.bio.seoDescription,
   icons: {

@@ -1,8 +1,7 @@
 import { PublicationObservatory } from "./components/publication-observatory";
 import { portfolioData } from "./data/portfolio-content";
 import type { PortfolioData } from "./data/portfolio-schema";
-
-const CANONICAL_URL = "https://tundergod.github.io";
+import { CANONICAL_URL } from "./lib/site";
 
 function ArrowIcon() {
   return <span aria-hidden="true">↗</span>;
@@ -55,7 +54,9 @@ export default function Home() {
     <main>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(structuredData).replace(/</g, "\\u003c"),
+        }}
       />
       <header className="site-header" id="top">
         <a className="wordmark" href="#top" aria-label={`${bio.name}, home`}>
