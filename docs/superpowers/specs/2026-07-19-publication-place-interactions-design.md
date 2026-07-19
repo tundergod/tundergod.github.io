@@ -43,7 +43,7 @@ There is one COBE marker and one bound DOM label per place.
 
 - The resting label shows only the city, for example `Long Beach`.
 - Hover, keyboard focus, or a mobile tap expands the same label.
-- The expanded label lists every conference series and year at the place, for example `DAC '26, DAC '25`.
+- The expanded label lists every conference series and year at the place, for example `DAC'26, DAC'25`.
 - The expanded label shows the number of unique publications attached to all editions at the place, for example `3 publications`.
 - Publication counts deduplicate by publication ID even when a publication has multiple venue tags.
 - The expanded label may include country as secondary context, but the resting label remains city-only.

@@ -270,7 +270,7 @@ Require resting city labels and expandable detail content:
 
 ```js
 assert.match(html, /class="globe-label-city"[^>]*>Long Beach</);
-assert.match(html, /class="globe-label-editions"[^>]*>DAC '26</);
+assert.match(html, /class="globe-label-editions"[^>]*>DAC&#x27;26</);
 assert.match(html, /class="globe-label-count"[^>]*>2 publications</);
 assert.doesNotMatch(html, /Long Beach, USA/);
 ```
@@ -307,7 +307,7 @@ For every place, derive editions and unique publications, then render one button
 </button>
 ```
 
-Format each edition as `${edition.series} '${String(edition.year).slice(-2)}` and keep editions sorted by descending year with stable data order for ties.
+Format each edition as `${edition.series}'${String(edition.year).slice(-2)}` and keep editions sorted by descending year with stable data order for ties.
 
 - [ ] **Step 4: Style resting and expanded states**
 
