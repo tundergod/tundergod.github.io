@@ -1,0 +1,61 @@
+[
+  {
+    "id": "san-jose",
+    "city": "San Jose",
+    "region": "California",
+    "country": "USA",
+    "latitude": 37.3382,
+    "longitude": -121.8863
+  },
+  {
+    "id": "barcelona",
+    "city": "Barcelona",
+    "country": "Spain",
+    "latitude": 41.3874,
+    "longitude": 2.1686
+  },
+  {
+    "id": "long-beach",
+    "city": "Long Beach",
+    "region": "California",
+    "country": "USA",
+    "latitude": 33.7701,
+    "longitude": -118.1937
+  },
+  {
+    "id": "verona",
+    "city": "Verona",
+    "country": "Italy",
+    "latitude": 45.4384,
+    "longitude": 10.9916
+  },
+  {
+    "id": "thessaloniki",
+    "city": "Thessaloniki",
+    "country": "Greece",
+    "latitude": 40.6401,
+    "longitude": 22.9444
+  },
+  {
+    "id": "hong-kong",
+    "city": "Hong Kong",
+    "country": "Hong Kong",
+    "latitude": 22.3193,
+    "longitude": 114.1694
+  },
+  {
+    "id": "san-francisco",
+    "city": "San Francisco",
+    "region": "California",
+    "country": "USA",
+    "latitude": 37.7749,
+    "longitude": -122.4194
+  },
+  {
+    "id": "antwerp",
+    "city": "Antwerp",
+    "country": "Belgium",
+    "latitude": 51.2194,
+    "longitude": 4.4025
+  }
+]

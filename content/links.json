@@ -1,0 +1,38 @@
+[
+  {
+    "id": "header-scholar",
+    "label": "Scholar",
+    "url": "https://scholar.google.com/citations?user=y_7M9psAAAAJ",
+    "placement": "header"
+  },
+  {
+    "id": "header-github",
+    "label": "GitHub",
+    "url": "https://github.com/tundergod",
+    "placement": "header"
+  },
+  {
+    "id": "header-contact",
+    "label": "Contact",
+    "url": "mailto:tundergod1882@gmail.com",
+    "placement": "header"
+  },
+  {
+    "id": "footer-email",
+    "label": "Email",
+    "url": "mailto:tundergod1882@gmail.com",
+    "placement": "footer"
+  },
+  {
+    "id": "footer-linkedin",
+    "label": "LinkedIn",
+    "url": "https://www.linkedin.com/in/tundergod",
+    "placement": "footer"
+  },
+  {
+    "id": "footer-orcid",
+    "label": "ORCID",
+    "url": "https://orcid.org/0000-0002-2391-8127",
+    "placement": "footer"
+  }
+]

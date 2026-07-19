@@ -1,0 +1,22 @@
+[
+  {
+    "id": "memory-storage",
+    "label": "Memory / Storage",
+    "description": "Flash, CXL, computational storage, and data movement."
+  },
+  {
+    "id": "architecture",
+    "label": "Architecture",
+    "description": "Efficient systems from edge devices to accelerators."
+  },
+  {
+    "id": "embedded",
+    "label": "Embedded",
+    "description": "Progress, timing, and freshness under unstable power."
+  },
+  {
+    "id": "robotics",
+    "label": "Robotics",
+    "description": "Resource-aware perception and manipulation systems."
+  }
+]
