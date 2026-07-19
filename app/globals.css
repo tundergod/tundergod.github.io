@@ -518,7 +518,7 @@ button {
 .filter-group-label {
   color: var(--steel-light);
   font-family: var(--font-geist-mono), monospace;
-  font-size: 8px;
+  font-size: 12px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -536,7 +536,7 @@ button {
   color: var(--muted);
   background: transparent;
   font-family: var(--font-geist-mono), monospace;
-  font-size: 9px;
+  font-size: 14px;
   letter-spacing: 0.06em;
   cursor: pointer;
   transition: border-color 160ms ease, color 160ms ease, background 160ms ease;
@@ -569,7 +569,7 @@ button {
   margin: 0;
   color: var(--signal);
   font-family: var(--font-geist-mono), monospace;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 460;
 }
 
@@ -578,7 +578,7 @@ button {
   margin-top: 7px;
   color: var(--steel-light);
   font-family: var(--font-geist-mono), monospace;
-  font-size: 9px;
+  font-size: 12px;
 }
 
 .publication-row {
@@ -652,8 +652,7 @@ button {
   pointer-events: none;
 }
 
-.publication-secondary-line,
-.publication-topic-tags {
+.publication-secondary-line {
   display: flex;
   align-items: baseline;
   flex-wrap: wrap;
@@ -665,7 +664,7 @@ button {
 }
 
 .publication-title {
-  font-size: clamp(14px, 1.12vw, 17px);
+  font-size: 18px;
   font-weight: 500;
   line-height: 1.38;
   letter-spacing: -0.018em;
@@ -675,7 +674,7 @@ button {
   min-width: 0;
   overflow: hidden;
   color: var(--steel-light);
-  font-size: 10px;
+  font-size: 13px;
   line-height: 1.5;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -684,11 +683,6 @@ button {
 .publication-secondary-line {
   gap: 6px 10px;
   margin-top: 7px;
-}
-
-.publication-topic-tags {
-  flex: 0 0 auto;
-  gap: 4px;
 }
 
 .publication-authors strong {
@@ -705,6 +699,7 @@ button {
   border: 1px solid var(--steel);
   color: var(--muted);
   font-family: var(--font-geist-mono), monospace;
+  font-size: 14px;
   line-height: 1;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -714,10 +709,9 @@ button {
 .venue-chip,
 .publication-type-tag,
 .publication-doi {
-  min-height: 23px;
+  min-height: 28px;
   margin-left: 7px;
-  padding: 4px 7px;
-  font-size: 9px;
+  padding: 5px 8px;
   vertical-align: 2px;
 }
 
@@ -726,11 +720,13 @@ button {
 }
 
 .publication-topic-tag {
-  min-height: 21px;
-  padding: 3px 6px;
+  min-height: 28px;
+  margin-left: 7px;
+  padding: 5px 8px;
   border-color: rgba(124, 199, 255, 0.24);
   color: var(--signal);
-  font-size: 8px;
+  font-size: 14px;
+  vertical-align: 2px;
 }
 
 .publication-doi {
@@ -774,7 +770,7 @@ button {
   gap: 2px;
   margin-bottom: 14px;
   color: var(--muted);
-  font-size: 8px;
+  font-size: 12px;
 }
 
 .panel-kicker > span:last-child {
@@ -787,7 +783,7 @@ button {
   color: var(--journey);
   background: transparent;
   font-family: var(--font-geist-mono), monospace;
-  font-size: 8px;
+  font-size: 12px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
@@ -934,6 +930,7 @@ button {
 }
 
 .globe-label-city {
+  font-size: 11px;
   white-space: nowrap;
 }
 
@@ -960,7 +957,7 @@ button {
 
 .globe-label-editions {
   color: var(--journey);
-  font-size: 8px;
+  font-size: 12px;
   white-space: normal;
 }
 
@@ -968,7 +965,7 @@ button {
 .globe-label-country {
   margin-top: 3px;
   color: var(--steel-light);
-  font-size: 8px;
+  font-size: 12px;
   letter-spacing: 0.04em;
   text-transform: none;
 }
@@ -982,8 +979,8 @@ button {
 }
 
 .globe-cluster-button {
-  width: 26px;
-  height: 26px;
+  width: 30px;
+  height: 30px;
   display: grid;
   place-items: center;
   padding: 0;
@@ -993,7 +990,7 @@ button {
   background: rgba(7, 9, 12, 0.94);
   box-shadow: 0 0 14px rgba(255, 138, 116, 0.24);
   font-family: var(--font-geist-mono), monospace;
-  font-size: 9px;
+  font-size: 12px;
   cursor: pointer;
 }
 
@@ -1024,7 +1021,7 @@ button {
   color: var(--ice);
   background: transparent;
   font-family: var(--font-geist-mono), monospace;
-  font-size: 9px;
+  font-size: 12px;
   text-align: left;
   cursor: pointer;
 }
@@ -1038,7 +1035,7 @@ button {
 
 .globe-cluster-menu small {
   color: var(--muted);
-  font-size: 8px;
+  font-size: 12px;
   white-space: nowrap;
 }
 
@@ -1434,7 +1431,7 @@ footer h2 {
   }
 
   .year-rail h3 {
-    font-size: 10px;
+    font-size: 14px;
     writing-mode: vertical-rl;
   }
 
@@ -1444,10 +1441,11 @@ footer h2 {
   }
 
   .publication-title {
-    font-size: 14px;
+    font-size: 16px;
   }
 
   .publication-authors {
+    font-size: 12px;
     white-space: normal;
     display: -webkit-box;
     -webkit-box-orient: vertical;
@@ -1484,7 +1482,7 @@ footer h2 {
   margin: 0;
   color: var(--steel-light);
   font-family: var(--font-geist-mono), monospace;
-  font-size: 9px;
+  font-size: 12px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }

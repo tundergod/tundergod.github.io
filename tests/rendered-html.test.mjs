@@ -145,7 +145,7 @@ test("keeps publication metadata in the approved title flow", async () => {
   assert.doesNotMatch(secondaryLine, /publication-topic-tags|publication-topic-tag/);
 });
 
-test("keeps enlarged bibliographic tags in the title text flow", async () => {
+test("enforces the approved readable typography scale", async () => {
   const styles = await readFile(
     new URL("../app/globals.css", import.meta.url),
     "utf8",
@@ -154,11 +154,33 @@ test("keeps enlarged bibliographic tags in the title text flow", async () => {
   assert.match(styles, /\.publication-title-line\s*{[^}]*display:\s*block;/s);
   assert.match(
     styles,
-    /\.venue-chip,[\s\S]*\.publication-doi\s*{[^}]*min-height:\s*23px;[^}]*font-size:\s*9px;/s,
+    /\.publication-title\s*{[^}]*font-size:\s*18px;/s,
   );
   assert.match(
     styles,
-    /\.publication-topic-tag\s*{[^}]*font-size:\s*8px;/s,
+    /\.venue-chip,[\s\S]*\.publication-doi\s*{[^}]*font-size:\s*14px;/s,
+  );
+  assert.match(styles, /\.publication-topic-tag\s*{[^}]*font-size:\s*14px;/s);
+  assert.match(styles, /\.publication-authors\s*{[^}]*font-size:\s*13px;/s);
+  assert.match(styles, /\.filter-chip\s*{[^}]*font-size:\s*14px;/s);
+  assert.match(styles, /\.filter-group-label\s*{[^}]*font-size:\s*12px;/s);
+  assert.match(styles, /\.year-rail h3\s*{[^}]*font-size:\s*14px;/s);
+  assert.match(styles, /\.year-rail span\s*{[^}]*font-size:\s*12px;/s);
+  assert.match(styles, /\.panel-kicker\s*{[^}]*font-size:\s*12px;/s);
+  assert.match(styles, /\.browse-conferences-button\s*{[^}]*font-size:\s*12px;/s);
+  assert.match(styles, /\.header-role\s*{[^}]*font-size:\s*12px;/s);
+  assert.match(styles, /\.globe-label-city\s*{[^}]*font-size:\s*11px;/s);
+  assert.match(styles, /\.globe-label-editions\s*{[^}]*font-size:\s*12px;/s);
+  assert.match(
+    styles,
+    /\.globe-label-count,[\s\S]*\.globe-label-country\s*{[^}]*font-size:\s*12px;/s,
+  );
+  assert.match(styles, /\.globe-cluster-button\s*{[^}]*font-size:\s*12px;/s);
+  assert.match(styles, /\.globe-cluster-menu button\s*{[^}]*font-size:\s*12px;/s);
+  assert.match(styles, /\.globe-cluster-menu small\s*{[^}]*font-size:\s*12px;/s);
+  assert.match(
+    styles,
+    /@media \(max-width: 660px\)[\s\S]*\.publication-title\s*{[^}]*font-size:\s*16px;[^}]*}[\s\S]*\.publication-authors\s*{[^}]*font-size:\s*12px;/s,
   );
 });
 
