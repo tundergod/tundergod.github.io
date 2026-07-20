@@ -308,3 +308,12 @@ test("journey playback control and timeline are rendered", async () => {
   assert.match(html, /ICCAD 2023, San Francisco/);
   assert.match(html, /DAC 2026, Long Beach/);
 });
+
+test("journey timeline renders chapter separators", async () => {
+  const response = await render();
+  const html = await response.text();
+  assert.match(html, />2023</);
+  assert.match(html, />2026 H1</);
+  assert.match(html, />H2</);
+  assert.doesNotMatch(html, />2026 H2</);
+});

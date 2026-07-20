@@ -780,6 +780,10 @@ button {
   margin-left: 0;
 }
 
+.journey-year.is-playing {
+  color: var(--journey);
+}
+
 .journey-node {
   display: flex;
   align-items: center;

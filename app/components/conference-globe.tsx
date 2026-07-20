@@ -19,11 +19,14 @@ import type {
   Publication,
 } from "../data/portfolio-schema";
 import {
+  averageCoordinates,
   coordinatesToAngles,
+  getJourneyChapters,
   getJourneyStops,
   getNextUpcomingStop,
   getPublicationsForPlace,
   interpolateCoordinates,
+  type JourneyChapter,
   type JourneyStop,
 } from "../lib/conference-model";
 import {
@@ -50,19 +53,21 @@ function easeAngle(current: number, target: number, amount: number) {
   return current + difference * amount;
 }
 
-const LEG_DURATION_MS = 950;
+const CHAPTER_DURATION_MS = 1900;
+const DIM_FACTOR = 0.45;
+const EMPTY_HIGHLIGHT: ReadonlySet<string> = new Set();
 const SIGNAL_RGB: [number, number, number] = [0.49, 0.78, 1];
 const JOURNEY_RGB: [number, number, number] = [1, 0.54, 0.45];
 
 type PlaybackState = {
-  legIndex: number;
-  legStartedAt: number;
+  chapterIndex: number;
+  chapterStartedAt: number;
   from: { phi: number; theta: number };
   trailArcs: Arc[];
 };
 
 function dimColor(color: [number, number, number]): [number, number, number] {
-  return [color[0] * 0.45, color[1] * 0.45, color[2] * 0.45];
+  return [color[0] * DIM_FACTOR, color[1] * DIM_FACTOR, color[2] * DIM_FACTOR];
 }
 
 function legColor(stop: JourneyStop) {
@@ -71,6 +76,27 @@ function legColor(stop: JourneyStop) {
 
 function easeInOutCubic(t: number) {
   return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
+}
+
+function buildChapterArcs(
+  previous: JourneyChapter | undefined,
+  current: JourneyChapter,
+  t: number,
+): Arc[] {
+  if (!previous) return [];
+  return previous.stops.flatMap((fromStop) =>
+    current.stops.map((toStop) => ({
+      from: [fromStop.place.latitude, fromStop.place.longitude] as [number, number],
+      to: t >= 1
+        ? ([toStop.place.latitude, toStop.place.longitude] as [number, number])
+        : interpolateCoordinates(
+            [fromStop.place.latitude, fromStop.place.longitude],
+            [toStop.place.latitude, toStop.place.longitude],
+            t,
+          ),
+      color: legColor(toStop),
+    })),
+  );
 }
 
 function getAnchorStyle(placeId: string) {
@@ -142,26 +168,29 @@ export function ConferenceGlobe({
   const playbackRef = useRef<PlaybackState | null>(null);
   const arcsRef = useRef<Arc[]>([]);
   const journeyStopsRef = useRef<JourneyStop[]>([]);
+  const journeyChaptersRef = useRef<JourneyChapter[]>([]);
   const cameraRef = useRef(
     activePlace
       ? coordinatesToAngles(activePlace.latitude, activePlace.longitude)
       : { phi: 0.45, theta: 0.22 },
   );
   const [isPlaying, setIsPlaying] = useState(false);
-  const [playbackLeg, setPlaybackLeg] = useState(-1);
+  const [playbackChapter, setPlaybackChapter] = useState(-1);
 
   const handleFinishRef = useRef(() => {});
   useEffect(() => {
     handleFinishRef.current = () => {
+      const chapters = journeyChaptersRef.current;
       const stops = journeyStopsRef.current;
-      arcsRef.current = stops.slice(1).map((stop, index) => ({
-        from: [stops[index].place.latitude, stops[index].place.longitude] as [number, number],
-        to: [stop.place.latitude, stop.place.longitude] as [number, number],
-        color: dimColor(legColor(stop)),
-      }));
+      arcsRef.current = chapters.flatMap((chapter, index) =>
+        buildChapterArcs(chapters[index - 1], chapter, 1).map((arc) => ({
+          ...arc,
+          color: dimColor(arc.color as [number, number, number]),
+        })),
+      );
       playbackRef.current = null;
       setIsPlaying(false);
-      setPlaybackLeg(-1);
+      setPlaybackChapter(-1);
       const landing = getNextUpcomingStop(stops) ?? stops[stops.length - 1];
       if (landing) onSelectPlace(landing.place.id);
     };
@@ -196,12 +225,12 @@ export function ConferenceGlobe({
     let collisionFrame = 0;
     cameraRef.current = { phi, theta };
 
-    const buildMarkers = (highlightedPlaceId?: string): Marker[] =>
+    const buildMarkers = (highlighted: ReadonlySet<string>): Marker[] =>
       placesWithConferences.map(({ place }) => ({
         id: place.id,
         location: [place.latitude, place.longitude] as [number, number],
-        size: highlightedPlaceId === place.id ? 0.085 : 0.045,
-        color: highlightedPlaceId === place.id ? JOURNEY_RGB : SIGNAL_RGB,
+        size: highlighted.has(place.id) ? 0.085 : 0.045,
+        color: highlighted.has(place.id) ? JOURNEY_RGB : SIGNAL_RGB,
       }));
 
     const globe = createGlobe(canvas, {
@@ -220,7 +249,9 @@ export function ConferenceGlobe({
       markerElevation: 0.025,
       opacity: 0.93,
       scale: 0.93,
-      markers: buildMarkers(activePlaceRef.current?.id),
+      markers: buildMarkers(
+        activePlaceRef.current ? new Set([activePlaceRef.current.id]) : EMPTY_HIGHLIGHT,
+      ),
       arcs: arcsRef.current,
     });
     setLabelHost(canvas.parentElement);
@@ -270,52 +301,45 @@ export function ConferenceGlobe({
 
     const render = () => {
       const playback = playbackRef.current;
-      let highlightedPlaceId = activePlaceRef.current?.id;
+      let highlighted: ReadonlySet<string> = activePlaceRef.current
+        ? new Set([activePlaceRef.current.id])
+        : EMPTY_HIGHLIGHT;
       if (playback) {
-        const stops = journeyStopsRef.current;
-        const stop = stops[playback.legIndex];
+        const chapters = journeyChaptersRef.current;
+        const chapter = chapters[playback.chapterIndex];
         const progress = Math.min(
           1,
-          (performance.now() - playback.legStartedAt) / LEG_DURATION_MS,
+          (performance.now() - playback.chapterStartedAt) / CHAPTER_DURATION_MS,
         );
         const eased = easeInOutCubic(progress);
-        const target = coordinatesToAngles(stop.place.latitude, stop.place.longitude);
+        const centroid = averageCoordinates(
+          chapter.stops.map((stop) => [stop.place.latitude, stop.place.longitude]),
+        );
+        const target = coordinatesToAngles(centroid[0], centroid[1]);
         phi = easeAngle(playback.from.phi, target.phi, eased);
         theta = playback.from.theta + (target.theta - playback.from.theta) * eased;
-        highlightedPlaceId = stop.place.id;
-        const previous = stops[playback.legIndex - 1];
+        highlighted = new Set(chapter.stops.map((stop) => stop.place.id));
+        const previous = chapters[playback.chapterIndex - 1];
         if (previous) {
           arcsRef.current = [
             ...playback.trailArcs,
-            {
-              from: [previous.place.latitude, previous.place.longitude] as [number, number],
-              to: interpolateCoordinates(
-                [previous.place.latitude, previous.place.longitude],
-                [stop.place.latitude, stop.place.longitude],
-                eased,
-              ),
-              color: legColor(stop),
-            },
+            ...buildChapterArcs(previous, chapter, eased),
           ];
         }
         if (progress >= 1) {
           if (previous) {
             playback.trailArcs = [
               ...playback.trailArcs,
-              {
-                from: [previous.place.latitude, previous.place.longitude] as [number, number],
-                to: [stop.place.latitude, stop.place.longitude] as [number, number],
-                color: legColor(stop),
-              },
+              ...buildChapterArcs(previous, chapter, 1),
             ];
           }
-          if (playback.legIndex >= stops.length - 1) {
+          if (playback.chapterIndex >= chapters.length - 1) {
             handleFinishRef.current();
           } else {
-            playback.legIndex += 1;
-            playback.legStartedAt = performance.now();
+            playback.chapterIndex += 1;
+            playback.chapterStartedAt = performance.now();
             playback.from = { phi, theta };
-            setPlaybackLeg(playback.legIndex);
+            setPlaybackChapter(playback.chapterIndex);
           }
         }
       } else if (activePlaceRef.current) {
@@ -332,7 +356,7 @@ export function ConferenceGlobe({
         height: size * 2,
         phi,
         theta,
-        markers: buildMarkers(highlightedPlaceId),
+        markers: buildMarkers(highlighted),
         arcs: arcsRef.current,
       });
       if (collisionFrame % 8 === 0) updateLabelGroups();
@@ -359,7 +383,7 @@ export function ConferenceGlobe({
     arcsRef.current = playback.trailArcs;
     playbackRef.current = null;
     setIsPlaying(false);
-    setPlaybackLeg(-1);
+    setPlaybackChapter(-1);
   }, []);
 
   const startJourney = useCallback(() => {
@@ -370,19 +394,20 @@ export function ConferenceGlobe({
     const stops = getJourneyStops(conferenceEditions, places, new Date());
     if (stops.length === 0) return;
     journeyStopsRef.current = stops;
+    journeyChaptersRef.current = getJourneyChapters(stops);
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       handleFinishRef.current();
       return;
     }
     arcsRef.current = [];
     playbackRef.current = {
-      legIndex: 0,
-      legStartedAt: performance.now(),
+      chapterIndex: 0,
+      chapterStartedAt: performance.now(),
       from: { ...cameraRef.current },
       trailArcs: [],
     };
     setIsPlaying(true);
-    setPlaybackLeg(0);
+    setPlaybackChapter(0);
   }, [conferenceEditions, places, stopJourney]);
 
   const handleSelectPlace = useCallback((placeId: string) => {
@@ -415,6 +440,10 @@ export function ConferenceGlobe({
     [conferenceEditions, places, timelineNow],
   );
   const nextUpcomingEditionId = getNextUpcomingStop(timelineStops)?.edition.id;
+  const timelineChapters = useMemo(
+    () => getJourneyChapters(timelineStops),
+    [timelineStops],
+  );
 
   function pauseGlobeInteraction() {
     interactionPausedRef.current = true;
@@ -586,26 +615,41 @@ export function ConferenceGlobe({
           {isPlaying ? "Stop journey" : "Play journey"}
         </button>
         <div className="journey-timeline" role="group" aria-label="Conference journey timeline">
-          {timelineStops.map((stop, index) => {
-            const previousStop = timelineStops[index - 1];
-            const showYear = !previousStop || previousStop.edition.year !== stop.edition.year;
-            const classNames = ["journey-node", stop.status === "past" ? "is-past" : "is-upcoming"];
-            if (stop.edition.id === nextUpcomingEditionId) classNames.push("is-next");
-            if (stop.place.id === activePlaceId) classNames.push("is-current");
-            if (isPlaying && index === playbackLeg) classNames.push("is-playing");
+          {timelineChapters.map((chapter, chapterIndex) => {
+            const previousChapter = timelineChapters[chapterIndex - 1];
+            const separator =
+              !previousChapter || previousChapter.year !== chapter.year
+                ? chapter.label
+                : chapter.label.slice(chapter.label.indexOf(" ") + 1);
+            const chapterActive = isPlaying && chapterIndex === playbackChapter;
             return (
-              <Fragment key={stop.edition.id}>
-                {showYear && (
-                  <span className="journey-year" aria-hidden="true">{stop.edition.year}</span>
-                )}
-                <button
-                  className={classNames.join(" ")}
-                  type="button"
-                  suppressHydrationWarning
-                  aria-label={`${stop.edition.series} ${stop.edition.year}, ${stop.place.city}`}
-                  aria-pressed={stop.place.id === activePlaceId}
-                  onClick={() => handleSelectPlace(stop.place.id)}
-                />
+              <Fragment key={chapter.id}>
+                <span
+                  className={chapterActive ? "journey-year is-playing" : "journey-year"}
+                  aria-hidden="true"
+                >
+                  {separator}
+                </span>
+                {chapter.stops.map((stop) => {
+                  const classNames = [
+                    "journey-node",
+                    stop.status === "past" ? "is-past" : "is-upcoming",
+                  ];
+                  if (stop.edition.id === nextUpcomingEditionId) classNames.push("is-next");
+                  if (stop.place.id === activePlaceId) classNames.push("is-current");
+                  if (chapterActive) classNames.push("is-playing");
+                  return (
+                    <button
+                      className={classNames.join(" ")}
+                      type="button"
+                      key={stop.edition.id}
+                      suppressHydrationWarning
+                      aria-label={`${stop.edition.series} ${stop.edition.year}, ${stop.place.city}`}
+                      aria-pressed={stop.place.id === activePlaceId}
+                      onClick={() => handleSelectPlace(stop.place.id)}
+                    />
+                  );
+                })}
               </Fragment>
             );
           })}
