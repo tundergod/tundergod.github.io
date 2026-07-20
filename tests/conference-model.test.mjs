@@ -12,6 +12,8 @@ import {
   getJourneyStops,
   getNextUpcomingStop,
   interpolateCoordinates,
+  getJourneyChapters,
+  averageCoordinates,
 } from "../app/lib/conference-model.ts";
 import { loadContent } from "../scripts/load-content.ts";
 
@@ -223,4 +225,109 @@ test("interpolateCoordinates follows the great circle", () => {
   assert.ok(Math.abs(end[0] - 50) < 1e-9 && Math.abs(end[1] - 60) < 1e-9);
   const mid = interpolateCoordinates([0, 0], [0, 90], 0.5);
   assert.ok(Math.abs(mid[0] - 0) < 1e-9 && Math.abs(mid[1] - 45) < 1e-9);
+});
+
+function syntheticStop(id, year, month, day) {
+  return {
+    edition: { id, series: id.toUpperCase(), name: id, year, dates: "", placeId: "p" },
+    place: { id: "p", city: "P", country: "P", latitude: 0, longitude: 0 },
+    startDate: new Date(year, month, day),
+    status: "past",
+  };
+}
+
+const close = (a, b) => Math.abs(a - b) < 1e-9;
+
+test("chapters group the real content into year and half-year chapters", () => {
+  const stops = getJourneyStops(conferenceEditions, places, new Date(2026, 6, 20));
+  const chapters = getJourneyChapters(stops);
+  assert.deepEqual(
+    chapters.map(({ id, stops: chapterStops }) => [
+      id,
+      chapterStops.map((stop) => stop.edition.id),
+    ]),
+    [
+      ["2023", ["date-2023", "iccad-2023"]],
+      ["2026-h1", ["aspdac-2026", "sac-2026", "date-2026"]],
+      ["2026-h2", ["dac-2026", "esweek-2026", "iccad-2026"]],
+    ],
+  );
+  assert.deepEqual(
+    chapters.map(({ label }) => label),
+    ["2023", "2026 H1", "2026 H2"],
+  );
+});
+
+test("a dense half splits into quarters while the other half stays whole", () => {
+  const stops = [
+    syntheticStop("a", 2027, 0, 10),
+    syntheticStop("b", 2027, 1, 5),
+    syntheticStop("c", 2027, 2, 20),
+    syntheticStop("d", 2027, 4, 1),
+    syntheticStop("e", 2027, 6, 4),
+    syntheticStop("f", 2027, 7, 15),
+    syntheticStop("g", 2027, 10, 30),
+  ];
+  const chapters = getJourneyChapters(stops);
+  assert.deepEqual(
+    chapters.map(({ id, stops: chapterStops }) => [
+      id,
+      chapterStops.map((stop) => stop.edition.id),
+    ]),
+    [
+      ["2027-q1", ["a", "b", "c"]],
+      ["2027-q2", ["d"]],
+      ["2027-h2", ["e", "f", "g"]],
+    ],
+  );
+  assert.equal(chapters[2].label, "2027 H2");
+});
+
+test("half boundary: June stays in H1, July starts H2", () => {
+  const stops = [
+    syntheticStop("mar", 2029, 2, 31),
+    syntheticStop("apr", 2029, 3, 1),
+    syntheticStop("jun", 2029, 5, 30),
+    syntheticStop("jul", 2029, 6, 1),
+  ];
+  const chapters = getJourneyChapters(stops);
+  assert.deepEqual(
+    chapters.map(({ id, stops: chapterStops }) => [
+      id,
+      chapterStops.map((stop) => stop.edition.id),
+    ]),
+    [
+      ["2029-h1", ["mar", "apr", "jun"]],
+      ["2029-h2", ["jul"]],
+    ],
+  );
+});
+
+test("quarter boundary: March 31 in Q1, April 1 in Q2", () => {
+  const stops = [
+    syntheticStop("m1", 2028, 0, 1),
+    syntheticStop("m2", 2028, 1, 1),
+    syntheticStop("mar", 2028, 2, 31),
+    syntheticStop("apr", 2028, 3, 1),
+  ];
+  const chapters = getJourneyChapters(stops);
+  assert.deepEqual(
+    chapters.map(({ id, stops: chapterStops }) => [
+      id,
+      chapterStops.map((stop) => stop.edition.id),
+    ]),
+    [
+      ["2028-q1", ["m1", "m2", "mar"]],
+      ["2028-q2", ["apr"]],
+    ],
+  );
+});
+
+test("averageCoordinates finds spherical centroids", () => {
+  const single = averageCoordinates([[25, 121]]);
+  assert.ok(close(single[0], 25) && close(single[1], 121));
+  const mid = averageCoordinates([[10, 0], [-10, 0]]);
+  assert.ok(close(mid[0], 0) && close(mid[1], 0));
+  const antipodal = averageCoordinates([[0, 0], [0, 180]]);
+  assert.deepEqual(antipodal, [0, 0]);
 });

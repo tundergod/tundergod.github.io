@@ -127,20 +127,27 @@ export function getNextUpcomingStop(stops: JourneyStop[]) {
   return stops.find((stop) => stop.status === "upcoming");
 }
 
+function toVector([latitude, longitude]: [number, number]): [number, number, number] {
+  const lat = (latitude * Math.PI) / 180;
+  const lon = (longitude * Math.PI) / 180;
+  return [
+    Math.cos(lat) * Math.cos(lon),
+    Math.cos(lat) * Math.sin(lon),
+    Math.sin(lat),
+  ];
+}
+
+function toCoordinates(vector: [number, number, number]): [number, number] {
+  const latitude = (Math.asin(Math.max(-1, Math.min(1, vector[2]))) * 180) / Math.PI;
+  const longitude = (Math.atan2(vector[1], vector[0]) * 180) / Math.PI;
+  return [latitude, longitude];
+}
+
 export function interpolateCoordinates(
   from: [number, number],
   to: [number, number],
   t: number,
 ): [number, number] {
-  const toVector = ([latitude, longitude]: [number, number]) => {
-    const lat = (latitude * Math.PI) / 180;
-    const lon = (longitude * Math.PI) / 180;
-    return [
-      Math.cos(lat) * Math.cos(lon),
-      Math.cos(lat) * Math.sin(lon),
-      Math.sin(lat),
-    ];
-  };
   const a = toVector(from);
   const b = toVector(to);
   const dot = Math.min(1, Math.max(-1, a[0] * b[0] + a[1] * b[1] + a[2] * b[2]));
@@ -149,12 +156,78 @@ export function interpolateCoordinates(
   const sinOmega = Math.sin(omega);
   const s0 = Math.sin((1 - t) * omega) / sinOmega;
   const s1 = Math.sin(t * omega) / sinOmega;
-  const v = [
+  const v: [number, number, number] = [
     s0 * a[0] + s1 * b[0],
     s0 * a[1] + s1 * b[1],
     s0 * a[2] + s1 * b[2],
   ];
-  const latitude = (Math.asin(Math.max(-1, Math.min(1, v[2]))) * 180) / Math.PI;
-  const longitude = (Math.atan2(v[1], v[0]) * 180) / Math.PI;
-  return [latitude, longitude];
+  return toCoordinates(v);
+}
+
+export type JourneyChapter = {
+  id: string;
+  label: string;
+  year: number;
+  stops: JourneyStop[];
+};
+
+const HALF_LABELS = ["H1", "H2"];
+const QUARTER_LABELS = ["Q1", "Q2", "Q3", "Q4"];
+
+export function getJourneyChapters(
+  stops: JourneyStop[],
+  maxStopsPerChapter = 3,
+): JourneyChapter[] {
+  const chapters: JourneyChapter[] = [];
+  const years = [...new Set(stops.map((stop) => stop.edition.year))];
+  for (const year of years) {
+    const yearStops = stops.filter((stop) => stop.edition.year === year);
+    if (yearStops.length <= maxStopsPerChapter) {
+      chapters.push({ id: String(year), label: String(year), year, stops: yearStops });
+      continue;
+    }
+    for (let half = 0; half < 2; half += 1) {
+      const halfStops = yearStops.filter(
+        (stop) => Math.floor(stop.startDate.getMonth() / 6) === half,
+      );
+      if (halfStops.length === 0) continue;
+      if (halfStops.length <= maxStopsPerChapter) {
+        chapters.push({
+          id: `${year}-${HALF_LABELS[half].toLowerCase()}`,
+          label: `${year} ${HALF_LABELS[half]}`,
+          year,
+          stops: halfStops,
+        });
+        continue;
+      }
+      for (let quarter = half * 2; quarter < half * 2 + 2; quarter += 1) {
+        const quarterStops = yearStops.filter(
+          (stop) => Math.floor(stop.startDate.getMonth() / 3) === quarter,
+        );
+        if (quarterStops.length === 0) continue;
+        chapters.push({
+          id: `${year}-${QUARTER_LABELS[quarter].toLowerCase()}`,
+          label: `${year} ${QUARTER_LABELS[quarter]}`,
+          year,
+          stops: quarterStops,
+        });
+      }
+    }
+  }
+  return chapters;
+}
+
+export function averageCoordinates(
+  points: Array<[number, number]>,
+): [number, number] {
+  const sum: [number, number, number] = [0, 0, 0];
+  for (const point of points) {
+    const vector = toVector(point);
+    sum[0] += vector[0];
+    sum[1] += vector[1];
+    sum[2] += vector[2];
+  }
+  const magnitude = Math.hypot(sum[0], sum[1], sum[2]);
+  if (magnitude < 1e-6) return points[0];
+  return toCoordinates([sum[0] / magnitude, sum[1] / magnitude, sum[2] / magnitude]);
 }
