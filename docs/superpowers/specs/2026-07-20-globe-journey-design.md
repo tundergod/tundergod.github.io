@@ -36,6 +36,11 @@ New pure functions, unit-testable with an injected `now: Date`:
 
 ## Playback (`app/components/conference-globe.tsx`)
 
+> **SUPERSEDED:** this section is replaced by the chapter-based playback in
+> `2026-07-20-globe-journey-chapters-design.md`. The rest of this spec
+> (data parsing, interruption, reduced motion, a11y, fallback, landing)
+> still governs.
+
 - "Play journey" control rendered by the globe unit, at the left end of the
   journey strip under the globe frame (next to the timeline, keeping the
   feature self-contained in `ConferenceGlobe`); toggles to "Stop" while
